@@ -4,7 +4,9 @@ LED1    (close to USB)
 LED2    (close to FPGA) 
 LED3    (close to Ethernet)
 
-by sending hex value to Dragon through the driver. You can also control text LCD (HD44780).
+by sending hex value to Dragon through the driver. You can also control text LCD (HD44780) as
+described in http://www.knjn.com/FPGA-PCI-LCD.html.
+
 
 You can compile the driver with :
 
@@ -71,4 +73,3 @@ Enjoy.
 
 PF
 08/2011 
-

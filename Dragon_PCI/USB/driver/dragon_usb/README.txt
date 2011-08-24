@@ -64,7 +64,7 @@ Examples:
 
 Just try the lcd_test.sh script as follows :
 
-# ./led_test.sh
+# ./lcd_test.sh
 
 It should display "Hello Linux!" on the LCD screen.
 

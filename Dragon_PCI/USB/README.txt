@@ -3,6 +3,7 @@ KNJN Dragon PCI Linux drivers
 
 dragon-ctrl	Linux user-space control program (by Nicolas Noble)
 driver		Linux USB driver for Dragon
+Windaube	Some Win$ programs used for test (compiled with MinGW)
 
 Here are some USB programs/drivers for Dragon PCI.
 

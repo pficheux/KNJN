@@ -1,0 +1,36 @@
+Release 10.1.03 ngdbuild K.39 (lin)
+Copyright (c) 1995-2008 Xilinx, Inc.  All rights reserved.
+
+Command Line: /opt/Xilinx/10.1/ISE/bin/lin/unwrapped/ngdbuild -ise
+/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise -intstyle ise
+-dd _ngo -nt timestamp -i -p xc2s100-tq144-6 TENBASET.ngc TENBASET.ngd
+
+Reading NGO file
+"/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/TENBASET.ngc" ...
+Reading in constraint information from 'TENBASET.ucf'...
+Gathering constraint information from source properties...
+Done.
+
+Resolving constraint associations...
+Checking Constraint Associations...
+Done...
+Checking Partitions ...
+
+Checking expanded design ...
+
+Partition Implementation Status
+-------------------------------
+
+  No Partitions were found in this design.
+
+-------------------------------
+
+NGDBUILD Design Results Summary:
+  Number of errors:     0
+  Number of warnings:   0
+
+Total memory usage is 70380 kilobytes
+
+Writing NGD file "TENBASET.ngd" ...
+
+Writing NGDBUILD log file "TENBASET.bld"...

@@ -1,0 +1,7 @@
+xst -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -ifn "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/TENBASET.xst" -ofn "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/TENBASET.syr"
+netgen -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -insert_glbl true -w -dir netgen/synthesis -ofmt verilog -sim TENBASET.ngc TENBASET_synthesis.v
+ngdbuild -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -dd _ngo  -nt timestamp -i -p xc2s100-tq144-6 "TENBASET.ngc" TENBASET.ngd
+map -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -p xc2s100-tq144-6 -cm area -pr off -k 4 -c 100 -tx off -o TENBASET_map.ncd TENBASET.ngd TENBASET.pcf
+par -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -w -intstyle ise -ol std -t 1 TENBASET_map.ncd TENBASET.ncd TENBASET.pcf
+trce -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -v 3 -s 6 -xml TENBASET TENBASET.ncd -o TENBASET.twr TENBASET.pcf -ucf TENBASET.ucf
+bitgen -ise "/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/myeth/myeth.ise" -intstyle ise -f TENBASET.ut TENBASET.ncd

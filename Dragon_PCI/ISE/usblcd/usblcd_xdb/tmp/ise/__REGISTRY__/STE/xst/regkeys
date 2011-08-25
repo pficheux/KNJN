@@ -1,0 +1,6 @@
+CommandLine
+/opt/Xilinx/10.1/ISE/bin/lin/unwrapped/xst -ise /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usblcd/usblcd.ise -intstyle ise -ifn /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usblcd/LCD_Text.xst -ofn /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usblcd/LCD_Text.syr -finalclean 1
+s
+FormatString
+xst [-ifn <InputFile>] [-ofn <OutputFile>] [-ise <iseProjectFile>] [--quiet] [-intstyle <Style>] [--deb <DebugLevel>] [--finalclean <Clean>] [--PcubeFlow] [--globOptFlow] [--XstNtrc]
+s

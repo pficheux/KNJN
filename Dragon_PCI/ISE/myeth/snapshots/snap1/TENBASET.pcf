@@ -1,0 +1,24 @@
+//! **************************************************************************
+// Written by: Map K.39 on Wed Aug 17 10:57:11 2011
+//! **************************************************************************
+
+SCHEMATIC START;
+COMP "CLK40" LOCATE = SITE "P15" LEVEL 1;
+COMP "CLK_USB" LOCATE = SITE "P18" LEVEL 1;
+COMP "LED<0>" LOCATE = SITE "P27" LEVEL 1;
+COMP "LED<1>" LOCATE = SITE "P51" LEVEL 1;
+COMP "LED<2>" LOCATE = SITE "P75" LEVEL 1;
+COMP "USB_D<0>" LOCATE = SITE "P67" LEVEL 1;
+COMP "USB_D<1>" LOCATE = SITE "P62" LEVEL 1;
+COMP "USB_D<2>" LOCATE = SITE "P60" LEVEL 1;
+COMP "USB_D<3>" LOCATE = SITE "P57" LEVEL 1;
+COMP "USB_D<4>" LOCATE = SITE "P39" LEVEL 1;
+COMP "USB_D<5>" LOCATE = SITE "P44" LEVEL 1;
+COMP "USB_D<6>" LOCATE = SITE "P46" LEVEL 1;
+COMP "USB_D<7>" LOCATE = SITE "P49" LEVEL 1;
+COMP "Ethernet_TDm" LOCATE = SITE "P77" LEVEL 1;
+COMP "Ethernet_TDp" LOCATE = SITE "P76" LEVEL 1;
+COMP "USB_FRDn" LOCATE = SITE "P26" LEVEL 1;
+COMP "Ethernet_RDp" LOCATE = SITE "P80" LEVEL 1;
+SCHEMATIC END;
+

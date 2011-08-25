@@ -36,7 +36,7 @@ MODULE_LICENSE("GPL");
 
 struct usb_dragon_usb {
   struct usb_device *udev;
-  int ledmask;
+  int ledmask; // we can send up to 32 bits
 };
 
 
@@ -55,13 +55,21 @@ MODULE_DEVICE_TABLE (usb, id_table);
 int dragon_set_ledmask (struct usb_dragon_usb *mydev, const char *buf)
 {
   int ret = 0, l, n;
-
-  // Get value from buf
-  sscanf (buf, "%x", &(mydev->ledmask));
+  char c;
 
   // Remove \n if any
   l = strlen(buf);
   l = (*(buf+l-1) == '\n' ? l-1 : l);
+
+  // Get value from buf
+  if (*buf == '\'') {
+    // 'a => 0x61
+    sscanf (buf+1, "%c", &c);
+    mydev->ledmask = c;
+    l--;
+  }
+  else
+    sscanf (buf, "%x", &(mydev->ledmask));
 
   // Handle x instead of 0x
   n = (l >= 2 ? l/2 : l);
@@ -121,15 +129,11 @@ static ssize_t dragon_usb_write(struct file *file, const char *buf, size_t count
   if (mydev == NULL)
     return -ENODEV;
 
-  printk(KERN_DEBUG "dragon_usb_write: %s %d\n", buf, count);
-
   real = min((size_t)BUF_SIZE, count);
 
   if (real)
     if (copy_from_user(tmp, buf, real))
       return -EFAULT;
-
-  printk(KERN_DEBUG "tmp= %s\n", tmp);
 
   // Now set the ledmask value
   if ((ret = dragon_set_ledmask (mydev, tmp)) < 0)
@@ -182,12 +186,6 @@ set_ledmask (struct device *dev, struct device_attribute *attr,
 
   interface = to_usb_interface (dev);
   mydev = usb_get_intfdata (interface);
-
-  /*
-  sscanf (buf, "%x", &(mydev->ledmask));
-  l = strlen(buf) - 1;
-  n = (l >= 2 ? l/2 : l);
-  */
 
   // Now set the ledmask value
   if ((ret = dragon_set_ledmask (mydev, buf)) < 0)

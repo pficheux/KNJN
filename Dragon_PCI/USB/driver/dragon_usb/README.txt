@@ -64,7 +64,7 @@ Examples:
 
 Just try the lcd_test.sh script as follows :
 
-# ./lcd_test.sh
+# ./lcd_test.sh > /dev/dragon_usb0
 
 It should display "Hello Linux!" on the LCD screen.
 

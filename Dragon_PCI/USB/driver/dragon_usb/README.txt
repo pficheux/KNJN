@@ -18,7 +18,11 @@ You can load it with :
 
 Once driver is loaded, you can access Dragon with both /sys entry or /dev/dragon_usb0.
 Value to send depends on design (USB_IO8,  USB_reg_banks, LCD_Text). Don't forget to load 
-design file *before* loading Linux driver !
+design file *before* loading Linux driver ! You control board by sending hex value (32 bits max) 
+or ONE char, examples :
+
+# echo -n 61 > /dev/dragon_usb0   ==> will display 'a'
+# echo -n \'a > /dev/dragon_usb0   ==> will display 'a'
 
 
 - IO8 test (USB_IO8.bit) :
@@ -66,7 +70,10 @@ Just try the lcd_test.sh script as follows :
 
 # ./lcd_test.sh > /dev/dragon_usb0
 
-It should display "Hello Linux!" on the LCD screen.
+It should display "Hello Linux!" on the LCD screen. You can also give a
+string as parameter :
+
+# ./lcd_test.sh "A sample string" > /dev/dragon_usb0
 
 
 Enjoy.

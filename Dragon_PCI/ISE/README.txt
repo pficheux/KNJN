@@ -1,4 +1,5 @@
-Here the ISE projects used for KNJN Linux development. ISE version is 10.1.03.
+Here are the ISE projects used for KNJN Linux development. ISE version is 
+10.1.03.
 
 myeth	 Ethernet/UDP test
 myled	 Very simple blinking LED

@@ -23,7 +23,7 @@ module myled( clk, LED);
 input clk;
 output LED;
 
-reg [22:0] cnt;
+reg [22:0] cnt = 0;
 always @(posedge clk) cnt<=cnt+1;
 
 assign LED = cnt[20] & ~cnt[22];

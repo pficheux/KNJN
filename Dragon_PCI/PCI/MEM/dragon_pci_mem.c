@@ -22,8 +22,6 @@ MODULE_DESCRIPTION("dragon_pci_mem");
 MODULE_AUTHOR("Pierre Ficheux");
 MODULE_LICENSE("GPL");
 
-#define PCI_PNP_RAM_SIZE 64             /* RAM size (bytes) */
-
 /*
  * Arguments
  */
@@ -33,7 +31,7 @@ MODULE_PARM_DESC(major, "Static major number (none = dynamic)");
 
 static int debug = 0; 
 module_param(debug, int, 0660);
-MODULE_PARM_DESC(major, "Debug flag (1 = YES, 0 = NO)");
+MODULE_PARM_DESC(debug, "Debug flag (1 = YES, 0 = NO)");
 
 /*
  * Supported devices
@@ -260,7 +258,7 @@ static int __devinit dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_
       }
     
       if (data->mmio[i] == NULL) {
-	printk(KERN_WARNING "pci: unable to remap I/O memory\n");
+	printk(KERN_WARNING "dragon_pci_mem: unable to remap I/O memory\n");
 	
 	ret = -ENOMEM;
 	goto cleanup_ioremap;
@@ -268,7 +266,7 @@ static int __devinit dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_
 
       data->mmio_len[i] = pci_resource_len(dev, i);
 
-      printk(KERN_INFO "pci: I/O memory has been remaped at %#08x\n", (u32)data->mmio[i]);
+      printk(KERN_INFO "dragon_pci_mem: I/O memory has been remaped at %#08x\n", (u32)data->mmio[i]);
     } else {
       data->mmio[i] = 0;
     }

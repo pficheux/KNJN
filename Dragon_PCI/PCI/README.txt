@@ -112,7 +112,7 @@ You can also use "hexdump" od "od" to check result:
 
 
 You can use cat + dd commands to send raw data to Dragon. The following 
-command sends 16 bytes from meduse.txt file (a very famous french song by 
+command sends 32 bytes from meduse.txt file (a very famous french song by 
 Georges Brassens).
 
 # cat meduse.txt | dd bs=32 count=1 > /dev/dragon 

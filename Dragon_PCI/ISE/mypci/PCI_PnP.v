@@ -16,6 +16,7 @@
 `define AUTOINCADDR
 `define INTERRUPT
 
+
 ////////////////////////////////////////////////////////////////////////////////
 module PCI_PnP
 (
@@ -32,6 +33,10 @@ module PCI_PnP
   CLK24, /*USB_FWRn, */USB_FRDn, USB_D
 );
 
+
+// Block RAM size is 2^ADDR double-word. Max is 40 Kbits for XC2S100 
+// 2^8 = 256 DW = 1024 bytes
+parameter ADDR = 8;
 // Specify the Vendor/Device ID
 // Make sure these values match the ones used in the INF file
 parameter VENDOR_ID = 16'h0100;
@@ -101,9 +106,11 @@ wire PCI_Targeted = PCI_TransactionStart & (
 
 ////////////////////////////////////////////////////////////////////////////////
 // When a transaction starts, the address is available for us to register
-reg [4:0] PCI_TransactionAddr;
+//reg [4:0] PCI_TransactionAddr;
+reg [ADDR-1:0] PCI_TransactionAddr;
 always @(posedge PCI_CLK)
-if(PCI_TransactionStart) PCI_TransactionAddr <= PCI_AD[6:2];
+//if(PCI_TransactionStart) PCI_TransactionAddr <= PCI_AD[6:2];
+if(PCI_TransactionStart) PCI_TransactionAddr <= PCI_AD[ADDR+1:2];						
 `ifdef AUTOINCADDR
 else if(PCI_DataTransfer) PCI_TransactionAddr <= PCI_TransactionAddr + 5'h1;
 `endif
@@ -207,7 +214,10 @@ case(PCI_TransactionAddr)
   5'h04: PCI_CSread <= {16'h0000, PCI_CSBAR0, 6'b000001};  // 10h: BAR0
 `endif
 `ifdef PCI_MEMSPACE
+// 64 Ko
   5'h05: PCI_CSread <= {PCI_MEMBAR1, 12'h000, 4'b0000};    // 14h: BAR1
+// 128 Mo
+//  5'h05: PCI_CSread <= {PCI_MEMBAR1, 23'h000000, 4'b0000};    // 14h: BAR1
 `endif
   5'h0B: PCI_CSread <= {32'h00000000};  // 2Ch: SubsystemID / SubsystemVendorID
 `ifdef INTERRUPT
@@ -230,7 +240,11 @@ always @(posedge PCI_CLK) if(PCI_TransferWrite) PCI_INTA <= (PCI_AD==32'h1234567
 // Instantiate the RAM
 // We use Xilinx's synthesis here (XST), which supports automatic RAM recognition
 // The following code creates a distributed RAM, but a blockram could also be used (we have 2 clock cycles to get the data out)
-reg [31:0] RAM [31:0];
+// 128 bytes
+//reg [31:0] RAM [31:0];
+// 256 bytes
+reg [31:0] RAM [2**ADDR-1:0];
+
 always @(posedge PCI_CLK) if(PCI_TransferWrite) RAM[PCI_TransactionAddr] <= PCI_AD;
 
 // now we can drive the PCI_AD bus

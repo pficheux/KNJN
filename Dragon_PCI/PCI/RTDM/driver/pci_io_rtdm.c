@@ -21,13 +21,16 @@ MODULE_DESCRIPTION("PCI Led driver");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Pierre Ficheux + EPITA students");
 
-static int debug;
+// Uncomment to use IRQ
+#define USE_IRQ
 
+static int debug;
 module_param(debug, int, 0644);
 
 struct pci_io_context {
   int iobase; // base address
   int value;  // value to write
+  rtdm_irq_t irq_handle; // 
 };
 
 int pci_io_open(struct rtdm_dev_context *context, rtdm_user_info_t *user_info, int oflags)
@@ -99,6 +102,13 @@ static ssize_t pci_io_write_rt(struct rtdm_dev_context *context, rtdm_user_info_
   return sizeof(int);
 }
 
+int irq_handler(rtdm_irq_t *irq_handle)
+{
+  rtdm_printk("%s Got IRQ !\n", __FUNCTION__);
+
+  return RTDM_IRQ_HANDLED;
+}
+
 
 static struct rtdm_device pci_io_device = {
   .struct_version = RTDM_DEVICE_STRUCT_VER,
@@ -143,6 +153,7 @@ static int __devinit pci_io_pci_probe(struct pci_dev *dev, const struct pci_devi
   struct rtdm_device *rt_dev;
   struct pci_io_context *private;
   int ret, i;
+  u8 mypin;
 
   printk(KERN_INFO "%s: found %x:%x\n", __FUNCTION__, id->vendor, id->device);
 
@@ -205,12 +216,24 @@ static int __devinit pci_io_pci_probe(struct pci_dev *dev, const struct pci_devi
   rt_dev->proc_name = rt_dev->device_name;
   rt_dev->device_id = dev_number++;
 
+  /* Install the irq handler */
+#ifdef USE_IRQ
+  pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
+  if (mypin) {
+    ret = rtdm_irq_request(&(private->irq_handle), dev->irq, irq_handler, 0, "myirq", NULL);
+    if (ret < 0)
+      printk(KERN_WARNING "%s: unable to register irq handler\n", __FUNCTION__);
+    else
+      printk(KERN_WARNING "%s: irq handler installed\n", __FUNCTION__);
+  }
+  else
+    printk(KERN_INFO "%s: no IRQ!\n", __FUNCTION__);
+#endif
   // Register RTDM device
   if ((ret = rtdm_dev_register(rt_dev)) != 0) {
     printk(KERN_WARNING "%s: rtdm_dev_register failed.\n", __FUNCTION__);
     goto cleanup_dev_register;
   }
-
 
   return 0;
 
@@ -231,8 +254,13 @@ static int __devinit pci_io_pci_probe(struct pci_dev *dev, const struct pci_devi
 static void __devexit pci_io_pci_remove(struct pci_dev *dev)
 {
   struct rtdm_device *rt_dev = pci_get_drvdata(dev);
+  struct pci_io_context *private = rt_dev->device_data;
 
   printk(KERN_INFO "%s started\n", __FUNCTION__);
+
+#ifdef USE_IRQ
+  rtdm_irq_free(&(private->irq_handle));
+#endif
 
   kfree(rt_dev->device_data);
 	

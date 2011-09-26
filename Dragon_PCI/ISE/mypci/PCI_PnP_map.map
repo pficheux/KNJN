@@ -4,14 +4,14 @@ Xilinx Map Application Log File for Design 'PCI_PnP'
 Design Information
 ------------------
 Command Line   : map -ise
-/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/mypci/mypci.ise -intstyle ise
--p xc2s100-tq144-6 -cm area -pr off -k 4 -c 100 -tx off -o PCI_PnP_map.ncd
-PCI_PnP.ngd PCI_PnP.pcf 
+/home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/mypci/mypci.ise
+-intstyle ise -p xc2s100-tq144-6 -cm area -pr off -k 4 -c 100 -tx off -o
+PCI_PnP_map.ncd PCI_PnP.ngd PCI_PnP.pcf 
 Target Device  : xc2s100
 Target Package : tq144
 Target Speed   : -6
 Mapper Version : spartan2 -- $Revision: 1.46.12.2 $
-Mapped Date    : Fri Mar 25 17:57:32 2011
+Mapped Date    : Mon Sep 26 09:33:58 2011
 
 Mapping design into LUTs...
 Running directed packing...
@@ -25,17 +25,17 @@ Design Summary:
 Number of errors:      0
 Number of warnings:    0
 Logic Utilization:
-  Number of Slice Flip Flops:       145 out of  2,400    6%
-  Number of 4 input LUTs:           143 out of  2,400    5%
+  Number of Slice Flip Flops:       263 out of  2,400   10%
+  Number of 4 input LUTs:           282 out of  2,400   11%
 Logic Distribution:
-    Number of occupied Slices:                         195 out of  1,200   16%
-    Number of Slices containing only related logic:    195 out of    195  100%
-    Number of Slices containing unrelated logic:         0 out of    195    0%
+    Number of occupied Slices:                         553 out of  1,200   46%
+    Number of Slices containing only related logic:    553 out of    553  100%
+    Number of Slices containing unrelated logic:         0 out of    553    0%
         *See NOTES below for an explanation of the effects of unrelated logic
-Total Number of 4 input LUTs:          273 out of  2,400   11%
-      Number used as logic:                       143
-      Number used as a route-thru:                 18
-      Number used for 32x1 RAMs:                   64
+Total Number of 4 input LUTs:          859 out of  2,400   35%
+      Number used as logic:                       282
+      Number used as a route-thru:                 17
+      Number used for 32x1 RAMs:                  512
       (Two LUTs used per 32x1 RAM)
       Number used as Shift registers:              48
    Number of bonded IOBs:            61 out of     92   66%
@@ -43,7 +43,7 @@ Total Number of 4 input LUTs:          273 out of  2,400   11%
    Number of GCLKs:                   2 out of      4   50%
    Number of GCLKIOBs:                2 out of      4   50%
 
-Peak Memory Usage:  138 MB
+Peak Memory Usage:  143 MB
 Total REAL time to MAP completion:  1 secs 
 Total CPU time to MAP completion:   1 secs 
 

@@ -4,7 +4,7 @@ KNJN Dragon PCI Linux drivers
 IO			IORESOURCE_IO driver (64 bytes)
 MEM 			IORESOURCE_MEM driver (64 Kbytes)
 dragon_pci_test.c	Test program
-meduse.txt		Sample data to send to Dragon with cat + dd
+meduse.txt, larose.txt	Sample data to send to Dragon with cat + dd
 RTDM			RTDM drivers (IO) for Xenomai
 
 0- Introduction
@@ -113,7 +113,7 @@ You can also use "hexdump" od "od" to check result:
 
 You can use cat + dd commands to send raw data to Dragon. The following 
 command sends 32 bytes from meduse.txt file (a very famous french song by 
-Georges Brassens).
+french singer Georges Brassens).
 
 # cat meduse.txt | dd bs=32 count=1 > /dev/dragon 
 1+0 records in

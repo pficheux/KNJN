@@ -18,7 +18,16 @@ TENBASET.bit set IP addr to 192.168.3.40 and eth addr to 16:FD:22:04:B1:61.
 
 $ echo 'hello dragon' | nc -u  192.168.3.40 1024
 
-Dragon should send back 'hello dragon' (use Wireshark to check).
+Dragon should send back 'hello dragon' (use Wireshark or tcmpdump to check).
+
+# tcpdump -i eth0 -A
+
+17:05:10.492766 IP opti760pf > 192.168.3.40: ICMP opti760pf udp port 1024 unreachable, length 54
+E..J....@."....m...(..q.....E..............(...m........hello dragon
+.....
+17:05:11.331437 IP 192.168.3.40.1024 > opti760pf.1024: UDP, length 18
+E..............(...m........hello dragon
+
 
 Enjoy.
 

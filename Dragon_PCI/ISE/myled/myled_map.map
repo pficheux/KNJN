@@ -11,7 +11,7 @@ Target Device  : xc2s100
 Target Package : tq144
 Target Speed   : -6
 Mapper Version : spartan2 -- $Revision: 1.46.12.2 $
-Mapped Date    : Fri Sep  2 14:14:53 2011
+Mapped Date    : Mon Oct 31 09:33:48 2011
 
 Mapping design into LUTs...
 Running directed packing...
@@ -40,7 +40,7 @@ Total Number of 4 input LUTs:           24 out of  2,400    1%
    Number of GCLKIOBs:                1 out of      4   25%
 
 Peak Memory Usage:  134 MB
-Total REAL time to MAP completion:  1 secs 
+Total REAL time to MAP completion:  0 secs 
 Total CPU time to MAP completion:   0 secs 
 
 NOTES:

@@ -11,7 +11,7 @@ Target Device  : xc2s100
 Target Package : tq144
 Target Speed   : -6
 Mapper Version : spartan2 -- $Revision: 1.46.12.2 $
-Mapped Date    : Mon Sep 26 09:33:58 2011
+Mapped Date    : Mon Oct 31 09:36:31 2011
 
 Mapping design into LUTs...
 Running directed packing...

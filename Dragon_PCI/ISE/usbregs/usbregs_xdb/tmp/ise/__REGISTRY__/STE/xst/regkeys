@@ -1,5 +1,5 @@
 CommandLine
-/opt/Xilinx/10.1/ISE/bin/lin/unwrapped/xst -ise /home/pierre/developpement/Perso/KNJN/PF/ISE_Test/usbregs/usbregs.ise -intstyle ise -ifn /home/pierre/developpement/Perso/KNJN/PF/ISE_Test/usbregs/USB_reg_banks.xst -ofn /home/pierre/developpement/Perso/KNJN/PF/ISE_Test/usbregs/USB_reg_banks.syr -finalclean 1
+/opt/Xilinx/10.1/ISE/bin/lin/unwrapped/xst -ise /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usbregs/usbregs.ise -intstyle ise -ifn /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usbregs/USB_reg_banks.xst -ofn /home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usbregs/USB_reg_banks.syr -finalclean 1
 s
 FormatString
 xst [-ifn <InputFile>] [-ofn <OutputFile>] [-ise <iseProjectFile>] [--quiet] [-intstyle <Style>] [--deb <DebugLevel>] [--finalclean <Clean>] [--PcubeFlow] [--globOptFlow] [--XstNtrc]

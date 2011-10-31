@@ -4,14 +4,14 @@ Xilinx Map Application Log File for Design 'USB_reg_banks'
 Design Information
 ------------------
 Command Line   : map -ise
-/home/pierre/developpement/Perso/KNJN/PF/ISE_Test/usbregs/usbregs.ise -intstyle
-ise -p xc2s100-tq144-6 -cm area -pr off -k 4 -c 100 -tx off -o
+/home/pierre/developpement/Perso/github/KNJN/Dragon_PCI/ISE/usbregs/usbregs.ise
+-intstyle ise -p xc2s100-tq144-6 -cm area -pr off -k 4 -c 100 -tx off -o
 USB_reg_banks_map.ncd USB_reg_banks.ngd USB_reg_banks.pcf 
 Target Device  : xc2s100
 Target Package : tq144
 Target Speed   : -6
 Mapper Version : spartan2 -- $Revision: 1.46.12.2 $
-Mapped Date    : Tue Aug 23 10:07:50 2011
+Mapped Date    : Mon Oct 31 09:40:45 2011
 
 Mapping design into LUTs...
 Running directed packing...
@@ -40,7 +40,7 @@ Total Number of 4 input LUTs:           62 out of  2,400    2%
    Number of GCLKIOBs:                1 out of      4   25%
 
 Peak Memory Usage:  134 MB
-Total REAL time to MAP completion:  1 secs 
+Total REAL time to MAP completion:  0 secs 
 Total CPU time to MAP completion:   0 secs 
 
 NOTES:

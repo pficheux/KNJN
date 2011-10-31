@@ -15,8 +15,8 @@
 -g TckPin:PullUp
 -g TdiPin:PullUp
 -g TdoPin:PullUp
--g TmsPin:PullUp
--g UnusedPin:PullDown
+-g TmsPin:PullNone
+-g UnusedPin:PullNone
 -g UserID:0xFFFFFFFF
 -g StartUpClk:CClk
 -g DONE_cycle:4

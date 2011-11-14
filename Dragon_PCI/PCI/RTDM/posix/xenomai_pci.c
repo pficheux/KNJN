@@ -1,150 +1,194 @@
-/*
+/* 
  * Xenomai version of SQUARE example, POSIX skin + RTDM driver
  */
 
-#include <err.h>
-#include <math.h>
-#include <pthread.h>
-#include <rtdm/rtdm.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/io.h>
 #include <sys/mman.h>
 #include <sys/time.h>
-#include <time.h>
+#include <sys/io.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <getopt.h>
+#include <time.h>
+#include <pthread.h>
+#include <rtdm/rtdm.h>
+#include <native/task.h>
+#include <rtdk.h>
 
-#include <pci_io_rtdm.h>
+pthread_t thid_square;
+int use_rtdk;
 
-#define __unused __attribute__((__unused__))
-
-pthread_t th_led_id;
+#define PERIOD          50000000LL /* 50 ms = 50 x 1000000 ns */
+int led_mask=0x01;
 int fd;
-unsigned long long int period_ns;
 
+long period_ns = 0;
+int loop_prt = 100;             /* print every 100 loops: 5 s */ 
 int test_loops = 0;             /* outer loop count */
 
-void *th_led_callback(void *args __unused)
+/* Thread function*/
+void *thread_square (void *dummy)
 {
-  int error;
-  struct timespec start, period, t, told;
-  int led_val = 0, loop_prt;
+    int err;
+    struct timespec start, period, t, told;
 
-  // Display every 2 sec
-  loop_prt = 2000000000 / period_ns;
+    // Display every 2 sec
+    loop_prt = 2000000000 / period_ns;
 
-  /* Start a  periodic task in 1s */
-  clock_gettime(CLOCK_REALTIME, &start);
-  start.tv_sec += 1;
-  period.tv_sec = 0;
-  period.tv_nsec = period_ns;
+    /* Start a periodic task in 1s */
+    clock_gettime(CLOCK_REALTIME, &start);
+    start.tv_sec += 1;
+    period.tv_sec = 0;
+    period.tv_nsec = period_ns;
 
-  // Make task periodic
-  if ((error = pthread_make_periodic_np(pthread_self(), &start, &period)) != 0)
-    errx(EXIT_FAILURE, "failed to set periodic (code = %d)", error);
+    // Warn switch
+    rt_task_set_mode(0, T_WARNSW, NULL);
 
-  /* Main loop */
-  for (;;) {
-    unsigned long overruns = 0;
+    // Make task periodic
+    err = pthread_make_periodic_np(pthread_self(), &start, &period);
 
-    test_loops++;
+    if (err)
+        {
+        fprintf(stderr,"square: failed to set periodic, code %d\n",err);
+	exit(EXIT_FAILURE);
+        }
 
-    /* Wait scheduler */
-    error = pthread_wait_np(&overruns);
+    /* Main loop */
+    for (;;)
+        {
+	  unsigned long overruns = 0;
+	  
+	  test_loops++;
 
-    if (error || overruns)
-      errx(EXIT_FAILURE, "wait_period failed"
-	   " (err = %d) (overruns = %lu)", error, overruns);
+	  /* Wait scheduler */
+	  err = pthread_wait_np(&overruns);
 
-    /* Write value with RTDM ioctl or write */
-//    if (rt_dev_ioctl(fd, PCI_IO_IOCTL_WRITE, led_val) < 0)
-//      errx(EXIT_FAILURE, "ioctl error");
-        if (rt_dev_write(fd, &led_val, sizeof(int)) < 0) 
-          errx(EXIT_FAILURE, "write error");
-      
-    led_val = ~led_val;
+	  if (err || overruns) {
+	    fprintf(stderr,"wait_period failed: err %d, overruns: %lu\n", err, overruns);
+	    exit(EXIT_FAILURE);
+	  }
 
-    /* Read value */
-    //		rt_dev_ioctl(fd, PCI_IO_IOCTL_READ, &val);
+	  /* Write value with RTDM ioctl or write */
+	  //    if (rt_dev_ioctl(fd, PCI_IO_IOCTL_WRITE, led_val) < 0)
+	  //      errx(EXIT_FAILURE, "ioctl error");
 
-    /* old_time <-- current_time */
-    told.tv_sec = t.tv_sec;
-    told.tv_nsec = t.tv_nsec;
+	  /* Write to // port */
+	  rt_dev_write(fd, (void *)&led_mask, 1);
+	  led_mask = ~led_mask;
 
-    /* Get current time */
-    clock_gettime(CLOCK_REALTIME, &t);
+	  /* Read value */
+	  //		rt_dev_ioctl(fd, PCI_IO_IOCTL_READ, &val);
 
-    /* Print if necessary */
-    if ((test_loops % loop_prt) == 0)
-      printf("Loop= %d sec= %ld nsec=%ld jitter= %lld ns\n", test_loops, t.tv_sec - told.tv_sec, t.tv_nsec - told.tv_nsec, t.tv_nsec - told.tv_nsec - period_ns);
-  }
+	  /* old_time <-- current_time */
+	  told.tv_sec = t.tv_sec;
+	  told.tv_nsec = t.tv_nsec;
+
+	  /* Get current time */
+	  clock_gettime (CLOCK_REALTIME, &t);
+
+	  /* Print if necessary */
+	  if ((test_loops % loop_prt) == 0) {
+	    if (use_rtdk)
+	      rt_printf ("Loop= %d dt= %ld %ld (%ld ns)\n", test_loops, t.tv_sec - told.tv_sec, t.tv_nsec - told.tv_nsec, t.tv_nsec - told.tv_nsec - period_ns);
+	    else
+	      printf ("Loop= %d dt= %ld %ld (%ld ns)\n", test_loops, t.tv_sec - told.tv_sec, t.tv_nsec - told.tv_nsec, t.tv_nsec - told.tv_nsec - period_ns);
+	  }
+	}
 }
 
-void cleanup_upon_sig(int sig __unused)
+void cleanup_upon_sig(int sig __attribute__((unused)))
 {
-  pthread_cancel(th_led_id);
-  pthread_join(th_led_id, NULL);
-  rt_dev_close(fd);
+  pthread_cancel (thid_square);
+  pthread_join (thid_square, NULL);
+  rt_dev_close (fd);
 
-  exit(EXIT_SUCCESS);
+  exit(0);
 }
 
-void usage()
+void warn_upon_switch(int sig __attribute__((unused)))
 {
-  extern char * __progname;
-
-  fprintf(stderr, "usage: %s dev period ", __progname);
+  printf ("DOMAIN SWITCH !!\n");
 }
 
-int main (int argc, char **argv)
+void usage (char *s)
 {
-  int error;
-  char *device;
-  struct sched_param th_led_param = { .sched_priority = 99 };
-  pthread_attr_t th_led_attr;
+  fprintf (stderr, "Usage: %s [-p period] [-k]\n", s);
+  exit (1);
+}
 
-  if (argc < 3) {
-    usage();
-    return EXIT_FAILURE;
-  }
+int main (int ac, char **av)
+{
+    int err;
+    struct sched_param param_square = {.sched_priority = 99 };
+    pthread_attr_t thattr_square;
+    char *cp, *progname = (char*)basename(av[0]);
 
-  device = argv[1];
-  period_ns = atoi(argv[2]); /* ns */
+    period_ns = PERIOD; /* ns */
 
-  if (period_ns == 0)
-    errx(EXIT_FAILURE, "invalid period");
+    while (--ac) {
+      if ((cp = *++av) == NULL)
+	break;
+      if (*cp == '-' && *++cp) {
+	switch(*cp) {
+	case 'k' :
+	  use_rtdk = 1;
+	  rt_print_auto_init(1);
+	  printf ("Using RTDK\n");
+	  break;
 
-  signal(SIGINT, cleanup_upon_sig);
-  signal(SIGTERM, cleanup_upon_sig);
-  signal(SIGHUP, cleanup_upon_sig);
+	case 'p' :
+	  period_ns = (unsigned long)atoi(*++av); break;
 
-  printf("Period: %lld us\n", period_ns / 1000);
+	default: 
+	  usage(progname);
+	  break;
+	}
+      }
+      else
+	break;
+    }
 
-  // Avoid paging: MANDATORY for TR !!
-  mlockall(MCL_CURRENT | MCL_FUTURE);
+    signal(SIGINT, cleanup_upon_sig);
+    signal(SIGTERM, cleanup_upon_sig);
+    signal(SIGHUP, cleanup_upon_sig);
+    signal(SIGALRM, cleanup_upon_sig);
+    signal(SIGXCPU, warn_upon_switch);
 
-  // Open RTDM driver
-  if ((fd = rt_dev_open(device, 0)) < 0)
-    err(EXIT_FAILURE, "rt_open");
+    printf("== Period: %ld us\n", period_ns / 1000);
 
-  // Thread attributes
-  pthread_attr_init(&th_led_attr);
+    // Avoid paging: MANDATORY for RT !!
+    mlockall(MCL_CURRENT|MCL_FUTURE);
 
-  // Joinable
-  pthread_attr_setdetachstate(&th_led_attr, PTHREAD_CREATE_JOINABLE);
+    // Open RTDM driver
+    if ((fd = rt_dev_open("pci_io0", 0)) < 0) {
+      perror("rt_open");
+      exit(EXIT_FAILURE);
+    }
 
-  // Priority, set priority to 99
-  pthread_attr_setinheritsched(&th_led_attr, PTHREAD_EXPLICIT_SCHED);
-  pthread_attr_setschedpolicy(&th_led_attr, SCHED_FIFO);
-  pthread_attr_setschedparam(&th_led_attr, &th_led_param);
+    // Thread attributes
+    pthread_attr_init(&thattr_square);
 
-  // Create thread
-  if ((error = pthread_create(&th_led_id, &th_led_attr, &th_led_callback, NULL)) != 0)
-    errx(EXIT_FAILURE, "failed to create thread (code = %d)", error);
+    // Joinable 
+    pthread_attr_setdetachstate(&thattr_square, PTHREAD_CREATE_JOINABLE);
 
-  pause();
+    // Priority, set priority to 99
+    pthread_attr_setinheritsched(&thattr_square, PTHREAD_EXPLICIT_SCHED);
+    pthread_attr_setschedpolicy(&thattr_square, SCHED_FIFO);
+    pthread_attr_setschedparam(&thattr_square, &param_square);
 
-  return EXIT_SUCCESS;
+    // Create thread 
+    err = pthread_create(&thid_square, &thattr_square, &thread_square, NULL);
+
+    if (err)
+        {
+	  fprintf(stderr,"square: failed to create square thread, code %d\n",err);
+	  return 0;
+        }
+
+    pause();
+
+    return 0;
 }

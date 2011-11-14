@@ -180,14 +180,16 @@ PCI IO RTDM driver loading
 pci_io_pci_probe: found 100:0                                                   
 pci_io_pci_probe: IO resource base address : ec00                               
 
-# xenomai_square_gpio -p 5000000 -r pci_io0                                   
-RTDM mode on "pci_io0" !
-Period= 5000000 ns                                                     
-GPIO device pci_io0 opened!    
-Loop= 400 sec= 1313661580 nsec= 357121091 delta= 4999835 ns jitter= -165 ns     
-Loop= 800 sec= 1313661581 nsec= 357120852 delta= 4999836 ns jitter= -164 ns     
-Loop= 1200 sec= 1313661582 nsec= 357121450 delta= 5000674 ns jitter= 674 ns     
-Loop= 1600 sec= 1313661583 nsec= 357121210 delta= 4999835 ns jitter= -165 ns
+# xenomai_pci  -p 1000000 -k
+Using RTDK                                                                   
+pci_io_open: opening device 0
+== Period: 1000 us                                                   
+DOMAIN SWITCH !!                                                              
+Loop= 2000 dt= 0 999759 (-241 ns)
+Loop= 4000 dt= 0 999759 (-241 ns)
+Loop= 6000 dt= 0 999759 (-241 ns) 
+Loop= 8000 dt= 0 999759 (-241 ns)
+Loop= 10000 dt= 0 1000597 (597 ns)
 ...
 
 

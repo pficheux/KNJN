@@ -267,6 +267,7 @@ static int __devinit dragon_pci_io_probe(struct pci_dev *dev, const struct pci_d
   }
 
   /* Install the irq handler */
+#ifdef USE_IRQ
   pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
   if (mypin) {
     ret = request_irq(dev->irq, dragon_pci_io_irq_handler, IRQF_SHARED, "dragon_pci_io", data);
@@ -277,6 +278,7 @@ static int __devinit dragon_pci_io_probe(struct pci_dev *dev, const struct pci_d
     }
   }
   else
+#endif
     printk(KERN_INFO "dragon_pci_io: no IRQ!\n");
 
   /* Link the new data structure with others */
@@ -302,9 +304,11 @@ static void __devexit dragon_pci_io_remove(struct pci_dev *dev)
   pci_release_regions(dev);
   pci_disable_device(dev);
 
+#ifdef USE_IRQ
   pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
   if (mypin)
     free_irq(dev->irq, data);
+#endif
 
   list_del(&data->link);
 

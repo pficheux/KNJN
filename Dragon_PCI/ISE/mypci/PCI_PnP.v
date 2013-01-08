@@ -234,7 +234,9 @@ wire PCI_TransferWrite = PCI_DevSel & PCI_WorkSpace & ~PCI_Transaction_Read_nWri
 //wire PCI_TransferRead  = PCI_DevSel & PCI_WorkSpace &  PCI_Transaction_Read_nWrite & ~PCI_IRDYn & ~PCI_TRDYn;
 
 `ifdef INTERRUPT
-always @(posedge PCI_CLK) if(PCI_TransferWrite) PCI_INTA <= (PCI_AD==32'h12345678);
+reg [23:0] counter; always @(posedge PCI_CLK) counter<=counter+24'h1;
+always @(posedge PCI_CLK) PCI_INTA<=&counter;
+//always @(posedge PCI_CLK) if(PCI_TransferWrite) PCI_INTA <= (PCI_AD==32'h12345678);
 `endif
 
 // Instantiate the RAM

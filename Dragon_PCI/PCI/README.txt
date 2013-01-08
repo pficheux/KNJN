@@ -91,7 +91,10 @@ then create device node.
 
 Program "dragon_pci_test" sends N x long words (32 bits) to Dragon board.
 
-# dragon_pci_test /dev/dragon 2
+# dragon_pci_test
+Usage: dragon_pci_test dragon_device_name addr count [data inc]
+
+# dragon_pci_test /dev/dragon 0 2 0 <- write 2 x 0x0 @ 0x0
 buf[0] = 0x00000000
 buf[1] = 0x11111111
 Wrote 8 chars

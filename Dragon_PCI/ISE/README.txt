@@ -8,6 +8,7 @@ myusb	 USB IO8
 usblcd	 USB text LCD
 usbregs	 USB reg banks
 binaries Generated .bit files
+make	 Makefile replacement to ISE GUI
 
 
 Enjoy.

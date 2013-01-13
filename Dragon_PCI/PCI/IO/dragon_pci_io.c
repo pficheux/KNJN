@@ -61,7 +61,7 @@ struct dragon_pci_io_struct {
  * Event handlers
  */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
-irqreturn_t dragon_pci_io_irq_handler(int irq, void *dev_id)
+  irqreturn_t dragon_pci_io_irq_handler(int irq, void *dev_id)
 #else
   irqreturn_t dragon_pci_io_irq_handler(int irq, void *dev_id, struct pt_regs *regs)
 #endif

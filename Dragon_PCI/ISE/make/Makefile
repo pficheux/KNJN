@@ -5,6 +5,11 @@
 #
 # $ source /opt/Xilinx/10.1/ISE/settings32.sh 
 #
+#  then
+#
+# $ mkdir <build_dir>/build
+# $ make BUILD=<build_dir> SRC=source_file
+#
 
 # Opts for for DragonPCI board
 BITGEN_OPTS= -g UnusedPin:Pullnone
@@ -16,8 +21,7 @@ FPGA= xc2s100-6tq144
 # Design sourcefile (.v/.vhd)
 #
 
-#SRC= you_should_specify_a_name_here
-SRC= myled.v
+SRC= you_should_specify_a_name_here
 
 #
 # Rules
@@ -38,26 +42,22 @@ UCF= $(PRG).ucf
 # Bit file (target)
 BIT= $(PRG).bit
 
-all: build/$(PRG).bit
+all: $(BUILD)/build/$(BIT)
 
-build/$(BIT): build/parout.ncd
-	cd build && (bitgen -w -g StartUpClk:CClk $(BITGEN_OPTS) parout.ncd $(BIT) $(PRG).pcf; ls -l *.bit)
+$(BUILD)/build/$(BIT): $(BUILD)/build/parout.ncd
+	cd $(BUILD)/build && (bitgen -w -g StartUpClk:CClk $(BITGEN_OPTS) parout.ncd $(BIT) $(PRG).pcf; ls -l *.bit)
 
-build/parout.ncd: build/$(PRG).ncd
-	cd build && par -w $(PRG).ncd parout.ncd $(PRG).pcf
+$(BUILD)/build/parout.ncd: $(BUILD)/build/$(PRG).ncd
+	cd $(BUILD)/build && par -w $(PRG).ncd parout.ncd $(PRG).pcf
 
-build/$(PRG).ncd: build/$(PRG).ngd
-	cd build && map -detail -pr b $(PRG).ngd
+$(BUILD)/build/$(PRG).ncd: $(BUILD)/build/$(PRG).ngd
+	cd $(BUILD)/build && map -detail -pr b $(PRG).ngd
 
-build/$(PRG).ngd:  build/$(PRG).ngc
-	cd build && ngdbuild -p $(FPGA) -uc ../$(UCF) $(PRG).ngc
+$(BUILD)/build/$(PRG).ngd:  $(BUILD)/build/$(PRG).ngc $(BUILD)/$(UCF)
+	cd $(BUILD)/build && ngdbuild -p $(FPGA) -uc $(BUILD)/$(UCF) $(PRG).ngc
 
-build/$(PRG).ngc: $(SRC)
-	cd build && echo "run -ifn ../$(SRC) -ifmt $(HDL) -ofn $(PRG) -p xc2s100-6tq144 -opt_mode Speed -opt_level 1" | xst
+$(BUILD)/build/$(PRG).ngc: $(SRC)
+	cd $(BUILD)/build && echo "run -ifn $(BUILD)/$(SRC) -ifmt $(HDL) -ofn $(PRG) -p xc2s100-6tq144 -opt_mode Speed -opt_level 1" | xst
 
 clean:
-	rm -rf build/*
-
-
-
-
+	rm -rf $(BUILD)/build/*

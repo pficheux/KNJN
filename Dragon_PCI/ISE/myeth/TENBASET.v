@@ -31,23 +31,23 @@ parameter Tx_UDPpayloadlength = 18;
 // "IP destination" - put the IP of the PC you want to send to
 parameter IPdestination_1 = 8'd192;
 parameter IPdestination_2 = 8'd168;
-parameter IPdestination_3 = 8'd3;
-parameter IPdestination_4 = 8'd109;
+parameter IPdestination_3 = 8'd1;
+parameter IPdestination_4 = 8'd100;
 
 // "Physical Address" - put the address of the PC you want to send to
-parameter PA_1 = 8'h00;
-parameter PA_2 = 8'h25;
-parameter PA_3 = 8'h64;
-parameter PA_4 = 8'h9B;
-parameter PA_5 = 8'h6A;
-parameter PA_6 = 8'hDB;
+parameter PA_1 = 8'hBC;
+parameter PA_2 = 8'hAE;
+parameter PA_3 = 8'hC5;
+parameter PA_4 = 8'hA0;
+parameter PA_5 = 8'hF8;
+parameter PA_6 = 8'h96;
 
 // "myIP" - IP of the FPGA
 // Make sure this IP is accessible and not already used on your network
 parameter myIP_1 = 8'd192;
 parameter myIP_2 = 8'd168;
-parameter myIP_3 = 8'd3;
-parameter myIP_4 = 8'd40;
+parameter myIP_3 = 8'd1;
+parameter myIP_4 = 8'd101;
 
 // "myPA" - physical address of the FPGA
 // It should be unique on your network

@@ -6,8 +6,8 @@ endif
 
 PWD		:= $(shell pwd)
 # ADEOS/Xenomai compatible kernel sources path
-#KDIR=$(HOME)/Enseignement/cours-epita-pf/2011/GISTR/LIRT/KNJN/buildroot-ow/output/build/linux-2.6.34.5
-KDIR= $(HOME)/developpement/Perso/github/KNJN/Dragon_PCI/PCI/RTDM/buildroot-ow/output/build/linux-2.6.34.5
+KDIR=$(HOME)/Enseignement/cours-tr-pf/exercices/buildroot/buildroot-ow/output/build/linux-2.6.34.5
+#KDIR= $(HOME)/developpement/Perso/github/KNJN/Dragon_PCI/PCI/RTDM/buildroot-ow/output/build/linux-2.6.34.5
 
 EXTRA_CFLAGS 	+= $(shell xeno-config --skin=posix --cflags)
 

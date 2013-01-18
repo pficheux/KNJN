@@ -13,12 +13,12 @@ FPGAconf.exe provided by KNJN.
 Loading design needs to load firmware.hex first:
 
 
-# dragon-ctrl -i firmware.hex reboot
-# dragon-ctrl -b bitfile.bit program
+# ./dragon-ctrl -i firmware.hex reboot
+# ./dragon-ctrl -b <path>/bitfile.bit program
 
 If you want to save firmware to EEPROM you can use the following command:
 
-# dragon-ctrl -i firmware.hex write-eeprom
+# ./dragon-ctrl -i firmware.hex write-eeprom
 
 Please note I had some problem with USB_reg_banks.bit => sometimes it does not
 work if loaded with dragon-ctrl but works fine if loaded with FPGAconf.

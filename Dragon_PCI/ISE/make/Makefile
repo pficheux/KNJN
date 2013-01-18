@@ -7,8 +7,9 @@
 #
 #  then
 #
-# $ mkdir <build_dir>/build
-# $ make BUILD=<build_dir> SRC=source_file
+# $ mkdir build && make SRC=source_file
+#
+# source_file (.v, .vhd, .ucf) should be in the Makefile directory
 #
 
 # Opts for for DragonPCI board
@@ -16,6 +17,9 @@ BITGEN_OPTS= -g UnusedPin:Pullnone
 
 # FPGA model
 FPGA= xc2s100-6tq144
+
+# Build in current dir
+BUILD= $(shell pwd)
 
 #
 # Design sourcefile (.v/.vhd)

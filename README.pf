@@ -1,0 +1,32 @@
+7/2013
+======
+
+- Réception design KNJN
+
+* Le design calcule le CRC
+* Correction .ucf pour ajouter P29
+
+NET "USB_FWRn"  LOC = "P29"  ;
+
+- Test du design Eth/USB => ISE/usb_eth/TENBASET.v
+
+# insmod dragon_usbnet.ko 
+# ifconfig usb0 192.168.1.1
+# arp -s 192.168.1.2 b8:27:eb:44:4b:2a <-- RPi
+# ping 192.168.1.2
+
+Le LNK de la RPi clignote mais pas de données affichées par tcpdump. Fonctionne
+avec le TENBASET.v initial (UDP).
+
+- Ajout Y (P50) pour tester à l'oscillo les signaux Eth (TD+/TD-)  => OK
+
+8/2013
+======
+
+- Test avec recvRawEth sur la RPi => idem
+
+- Désactivation rx/tx-checksumming => idem
+
+# ethtool --offload eth0 rx off tx off sg off tso off
+...
+

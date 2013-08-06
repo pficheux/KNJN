@@ -11,13 +11,14 @@
 // CLK40: 40MHz
 // CLK_USB: 24MHz
 
-module TENBASET(CLK40, Ethernet_TDp, Ethernet_TDm, Ethernet_RDp, LED, CLK_USB, USB_FRDn, USB_D);
+module TENBASET(CLK40, Ethernet_TDp, Ethernet_TDm, Ethernet_RDp, LED, Y, CLK_USB, USB_FRDn, USB_FWRn, USB_D);
 input CLK40;
 output Ethernet_TDp, Ethernet_TDm;
 input Ethernet_RDp;
 output [2:0] LED;
+output Y;
 
-input CLK_USB, USB_FRDn;
+input CLK_USB, USB_FRDn, USB_FWRn;
 inout [7:0] USB_D;
 
 //////////////////////////////////////////////////////////////////////
@@ -26,38 +27,38 @@ inout [7:0] USB_D;
 // Put here the number of bytes transmitted in the UDP payload
 // 18 minimum (smaller UDP payloads are possible but would need to be padded)
 // 1472 maximum (1500 bytes = max Ethernet payload - 28 bytes = IP/UDP headers length)
-parameter Tx_UDPpayloadlength = 18;
+//parameter Tx_UDPpayloadlength = 18;
 
 // "IP destination" - put the IP of the PC you want to send to
-parameter IPdestination_1 = 8'd1;
-parameter IPdestination_2 = 8'd2;
-parameter IPdestination_3 = 8'd3;
-parameter IPdestination_4 = 8'd6;
+parameter IPdestination_1 = 8'd192;
+parameter IPdestination_2 = 8'd168;
+parameter IPdestination_3 = 8'd1;
+parameter IPdestination_4 = 8'd110;
 
 // "Physical Address" - put the address of the PC you want to send to
-parameter PA_1 = 8'hb8;
-parameter PA_2 = 8'h27;
-parameter PA_3 = 8'heb;
-parameter PA_4 = 8'h44;
-parameter PA_5 = 8'h4b;
-parameter PA_6 = 8'h2A;
+parameter PA_1 = 8'h00;
+parameter PA_2 = 8'h0D;
+parameter PA_3 = 8'h87;
+parameter PA_4 = 8'hA9;
+parameter PA_5 = 8'h16;
+parameter PA_6 = 8'hE3;
 
 // "myIP" - IP of the FPGA
 // Make sure this IP is accessible and not already used on your network
-parameter myIP_1 = 8'd1;
-parameter myIP_2 = 8'd2;
-parameter myIP_3 = 8'd3;
-parameter myIP_4 = 8'd4;
+parameter myIP_1 = 8'd192;
+parameter myIP_2 = 8'd168;
+parameter myIP_3 = 8'd1;
+parameter myIP_4 = 8'd17;
 
 // "myPA" - physical address of the FPGA
 // It should be unique on your network
 // A random number should be fine, since the odds of choosing something already existing are really small
-parameter myPA_1 = 8'h16;	// not broadcast
-parameter myPA_2 = 8'hFD;
-parameter myPA_3 = 8'h22;
-parameter myPA_4 = 8'h04;
-parameter myPA_5 = 8'hB1;
-parameter myPA_6 = 8'h61;
+parameter myPA_1 = 8'h00;	// not broadcast
+parameter myPA_2 = 8'h12;
+parameter myPA_3 = 8'h34;
+parameter myPA_4 = 8'h56;
+parameter myPA_5 = 8'h78;
+parameter myPA_6 = 8'h90;
 
 wire clkRx = CLK_USB;  // should be 24MHz
 wire clkTx;  // should be 20MHz
@@ -74,23 +75,56 @@ reg [7:0] RxDataByteIn;
 wire RxNewByteAvailable;
 reg RxGoodPacket;
 reg RxPacketReceivedOK;
-reg [31:0] RxPacketCount;  always @(posedge clkRx) if(RxPacketReceivedOK) RxPacketCount <= RxPacketCount + 1;
+//reg [31:0] RxPacketCount;  always @(posedge clkRx) if(RxPacketReceivedOK) RxPacketCount <= RxPacketCount + 1;
 reg [10:0] TxAddress;
 wire [7:0] TxData;
 
-// 512 bytes RAM, big enough to store a UPD header (42 bytes) and up to 470 bytes of UDP payload
-// The RAM is also used to provide data to transmit
-ram8x512 RAM_RxTx(
-	.wr_clk(clkRx), .wr_adr(RxBitCount[11:3]), .data_in(RxDataByteIn), .wr_en(RxGoodPacket & RxNewByteAvailable & ~|RxBitCount[13:12]), 
+// tx
+// USB block logic
+reg [3:0] USB_wr_blockcnt=0;
+wire USB_wr_idle = USB_wr_blockcnt[3];  // end of block is when no data received for 8 clocks
+always @(posedge CLK_USB) if(~USB_FWRn) USB_wr_blockcnt<=0; else if(~USB_wr_idle) USB_wr_blockcnt<=USB_wr_blockcnt[2:0]+1'h1;
+reg [8:0] USB_wr_adr=0;
+always @(posedge CLK_USB) if(~USB_FWRn) USB_wr_adr<=USB_wr_adr+1'h1; else if(USB_wr_idle) USB_wr_adr<=0;
+
+wire USB_wr_packetend = &USB_wr_blockcnt[2:0] & USB_FWRn;
+//assign Y = USB_wr_packetend;
+assign Y = Ethernet_TDp;
+   
+reg [10:0] TxAddress_EndPayload;
+always @(posedge CLK_USB) if(USB_wr_packetend) TxAddress_EndPayload <= USB_wr_adr;
+
+// 512 bytes RAMs, big enough to store a UPD header (42 bytes) and up to 470 bytes of UDP payload
+ram8x512 RAM_UDP_tx(
+	.wr_clk(CLK_USB), .wr_adr(USB_wr_adr), .data_in(USB_D), .wr_en(~USB_FWRn), 
 	.rd_clk(clkTx), .rd_adr(TxAddress[8:0]), .data_out(TxData), .rd_en(1'b1));
+
+// rx
+// USB block logic
+reg [3:0] USB_rd_blockcnt=0;
+wire USB_rd_idle = USB_rd_blockcnt[3];  // end of block is when no data received for 8 clocks
+always @(posedge CLK_USB) if(~USB_FRDn) USB_rd_blockcnt<=0; else if(~USB_rd_idle) USB_rd_blockcnt<=USB_rd_blockcnt[2:0]+1'h1;
+reg [5:0] USB_rd_adr=0;
+always @(posedge CLK_USB) if(~USB_FRDn) USB_rd_adr<=USB_rd_adr+1'h1; else if(USB_rd_idle) USB_rd_adr<=0;
+
+// 512 bytes RAMs, big enough to store a UPD header (42 bytes) and up to 470 bytes of UDP payload
+wire [7:0] RAM_UDP_rx_data;
+ram8x512 RAM_UDP_rx(
+	.wr_clk(clkRx), .wr_adr(RxBitCount[11:3]), .data_in(RxDataByteIn), .wr_en(RxGoodPacket & RxNewByteAvailable & ~|RxBitCount[13:12]), 
+	.rd_clk(CLK_USB), .rd_adr(USB_rd_adr), .data_out(RAM_UDP_rx_data), .rd_en(1'b1));
+
+assign USB_D = ~USB_FRDn ? RAM_UDP_rx_data : 8'hZZ;
 
 //////////////////////////////////////////////////////////////////////
 // Tx section
 
 // Send a UDP packet roughly every second
-reg [23:0] counter; always @(posedge clkTx) counter<=counter+24'h1;
-reg StartSending; always @(posedge clkTx) StartSending<=&counter;
+//reg [23:0] counter; always @(posedge clkTx) counter<=counter+24'h1;
+//reg StartSending; always @(posedge clkTx) StartSending<=&counter;
+wire StartSending;
+Flag_CrossDomain SSCD(.clkA(CLK_USB), .FlagIn_clkA(USB_wr_packetend), .clkB(clkTx), .FlagOut_clkB(StartSending));
 
+/*
 // calculate the IP checksum, big-endian style
 wire [31:0] IPchecksum1 = 32'h0000C52D + Tx_UDPpayloadlength + 
 						(myIP_1<<8)+myIP_2+(myIP_3<<8)+myIP_4+
@@ -100,6 +134,7 @@ wire [15:0] IPchecksum = ~((IPchecksum2&32'h0000FFFF)+(IPchecksum2>>16));
 
 wire [15:0] IP_length = 16'h001C + Tx_UDPpayloadlength;
 wire [15:0] UDP_length = 16'h0008 + Tx_UDPpayloadlength;
+*/
 
 reg [7:0] pkt_data;
 always @(posedge clkTx) 
@@ -113,6 +148,7 @@ case(TxAddress)
   11'h7FD: pkt_data <= 8'h55;
   11'h7FE: pkt_data <= 8'h55;
   11'h7FF: pkt_data <= 8'hD5;
+/*
 // Ethernet header
   11'h000: pkt_data <= PA_1;
   11'h001: pkt_data <= PA_2;
@@ -159,19 +195,20 @@ case(TxAddress)
   11'h027: pkt_data <= UDP_length[ 7:0];
   11'h028: pkt_data <= 8'h00;
   11'h029: pkt_data <= 8'h00;
-
+*/
 // Payload
 // We send what we last received (stored in the blockram)
 // with last two bytes sent = the number of received packets
-  11'h028+Tx_UDPpayloadlength: pkt_data <= RxPacketCount[15:8];
-  11'h029+Tx_UDPpayloadlength: pkt_data <= RxPacketCount[ 7:0];
+//  11'h028+Tx_UDPpayloadlength: pkt_data <= RxPacketCount[15:8];
+//  11'h029+Tx_UDPpayloadlength: pkt_data <= RxPacketCount[ 7:0];
+
 // remainder of payload comes from the blockram
   default: pkt_data <= TxData;  // from blockram
 endcase
 
 // The 10BASE-T's magic
-wire [10:0] TxAddress_StartPayload = 11'h02A;
-wire [10:0] TxAddress_EndPayload = TxAddress_StartPayload + Tx_UDPpayloadlength;
+//wire [10:0] TxAddress_StartPayload = 11'h02A;
+//wire [10:0] TxAddress_EndPayload = TxAddress_StartPayload + Tx_UDPpayloadlength;
 wire [10:0] TxAddress_EndPacket = TxAddress_EndPayload + 11'h004;  // 4 bytes for CRC
 
 reg [3:0] ShiftCount;
@@ -196,11 +233,17 @@ reg LinkPulse; always @(posedge clkTx) LinkPulse <= &LinkPulseCount[16:1];
 // TP_IDL, shift-register and manchester encoder
 reg SendingPacketData; always @(posedge clkTx) SendingPacketData <= SendingPacket;
 reg [2:0] idlecount; always @(posedge clkTx) if(SendingPacketData) idlecount<=3'h0; else if(~&idlecount) idlecount<=idlecount+3'h1;
+
 wire dataout = (CRCflush ? ~CRC[31] : ShiftData[0]);
 reg qo; always @(posedge clkTx) qo <= (SendingPacketData ? ~dataout^ShiftCount[0] : 1'h1);
 reg qoe; always @(posedge clkTx) qoe <= SendingPacketData | LinkPulse | (idlecount<6);
+
 reg Ethernet_TDp; always @(posedge clkTx) Ethernet_TDp <= (qoe ?  qo : 1'b0);
 reg Ethernet_TDm; always @(posedge clkTx) Ethernet_TDm <= (qoe ? ~qo : 1'b0);
+
+//reg Ethernet_TDp; always @(posedge clkTx) Ethernet_TDp <= 0;
+//reg Ethernet_TDm; always @(posedge clkTx) Ethernet_TDm <= 0;
+
 
 //////////////////////////////////////////////////////////////////////
 // Rx section
@@ -327,19 +370,24 @@ wire RxPacketLengthOK = (RxBitCount>=RxBitCount_MinUPDlen);
 always @(posedge clkRx) RxPacketReceivedOK <= RxFrame & Rx_end_of_Ethernet_frame & RxCRC_OK & RxPacketLengthOK & RxGoodPacket;
 
 /////////////////////////////////////////////////
-reg [2:0] LED, RxLED;	
-always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h150) RxLED[0] <= RxNewBit;	 // the payload starts at byte 0x2A (bit 0x150)
-always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h151) RxLED[1] <= RxNewBit;
-always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h152) RxLED[2] <= RxNewBit;
-always @(posedge clkRx) if(RxPacketReceivedOK) LED <= RxLED;
+//reg [2:0] LED, RxLED;
+//always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h150) RxLED[0] <= RxNewBit;	 // the payload starts at byte 0x2A (bit 0x150)
+//always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h151) RxLED[1] <= RxNewBit;
+//always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h152) RxLED[2] <= RxNewBit;
+//always @(posedge clkRx) if(RxPacketReceivedOK) LED <= RxLED;
+reg [2:0] LED=0;
+always @(posedge CLK_USB) LED[0] <= LED[0] ^ USB_wr_packetend;
+always @(posedge clkTx) LED[1] <= LED[1] ^ (StartSending & ~SendingPacket);
+always @(posedge clkTx) LED[2] <= 0;
 
 /////////////////////////////////////////////////
+/*
 // On Dragon, we can also use USB to monitor the packet count
 reg [1:0] USB_readcnt;
 always @(posedge CLK_USB) if(~USB_FRDn) USB_readcnt <= USB_readcnt + 1;
 wire [7:0] USB_readmux = (USB_readcnt==0) ? RxPacketCount[7:0] : (USB_readcnt==1) ? RxPacketCount[15:8] : (USB_readcnt==2) ? RxPacketCount[23:16] : RxPacketCount[31:24];
 assign USB_D = (~USB_FRDn ? USB_readmux : 8'hZZ);
-
+*/
 endmodule
 
 
@@ -361,5 +409,28 @@ RAMB4_S8_S8 RAM(
 	.ADDRA(wr_adr), .DIA(data_in ), .CLKA(wr_clk), .WEA(wr_en), .ENA( 1'b1), .RSTA(1'b0),
 	.ADDRB(rd_adr), .DOB(data_out), .CLKB(rd_clk), .WEB( 1'b0), .ENB(rd_en), .RSTB(1'b0)
 );
-
 endmodule
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+module Flag_CrossDomain(
+    input clkA,
+    input FlagIn_clkA, 
+    input clkB,
+    output FlagOut_clkB
+);
+
+// this changes level when the FlagIn_clkA is seen in clkA
+reg FlagToggle_clkA;
+always @(posedge clkA) FlagToggle_clkA <= FlagToggle_clkA ^ FlagIn_clkA;
+
+// which can then be sync-ed to clkB
+reg [2:0] SyncA_clkB;
+always @(posedge clkB) SyncA_clkB <= {SyncA_clkB[1:0], FlagToggle_clkA};
+
+// and recreate the flag in clkB
+assign FlagOut_clkB = (SyncA_clkB[2] ^ SyncA_clkB[1]);
+endmodule
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////

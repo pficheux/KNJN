@@ -64,4 +64,4 @@ $(BUILD)/build/$(PRG).ngc: $(SRC)
 	cd $(BUILD)/build && echo "run -ifn $(BUILD)/$(SRC) -ifmt $(HDL) -ofn $(PRG) -p xc2s100-6tq144 -opt_mode Speed -opt_level 1" | xst
 
 clean:
-	rm -rf $(BUILD)/build/*
+	rm -rf $(BUILD)/build/* *~

@@ -37,10 +37,13 @@ static int dragon_usbnet_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 static struct sk_buff *
 dragon_usbnet_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
 {
+  /*
   static int cnt = 0;
   unsigned int *packet = (unsigned int *)skb->data;
 
-//  printk (KERN_INFO "%s: %d len= %d packet= %08X %08X ... %08X %08X ...\n", __FUNCTION__, cnt++, skb->len, packet[0], packet[1], packet[10], packet[11]);
+  printk (KERN_INFO "%s: %d len= %d packet= %08X %08X ... %08X %08X ...\n", __FUNCTION__, cnt++, skb->len, packet[0], packet[1], packet[10], packet[11]);
+
+  */
 
   return skb;
 }
@@ -82,7 +85,7 @@ static const struct driver_info	dragon_usbnet_info = {
 	.bind =		dragon_usbnet_bind,
 	.rx_fixup =	dragon_usbnet_rx_fixup,
 	.tx_fixup =	dragon_usbnet_tx_fixup,
-	.in = 1,       // IN endpoint
+	.in = 6,       // IN endpoint
 	.out = 2,      // OUT endpoint
 };
 

@@ -4,15 +4,15 @@ KDIR= /lib/modules/$(shell uname -r)/build
 
 PWD= $(shell pwd)
 
-obj-m := dragon_usbnet.o
+obj-m := dragon_usbnet.o usbnet.o
 
-all: sendRawEth
+all: sendRawEth recvRawEth
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
 install:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules_install
 
 clean:
-	rm -f *~ Module.markers Modules.symvers sendRawEth
+	rm -f *~ Module.markers Modules.symvers sendRawEth recvRawEth
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
 

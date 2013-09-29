@@ -15,12 +15,12 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 
-#define MY_DEST_MAC0	0x00
-#define MY_DEST_MAC1	0x22
-#define MY_DEST_MAC2	0x15
-#define MY_DEST_MAC3	0x80
-#define MY_DEST_MAC4	0xd5
-#define MY_DEST_MAC5	0x88
+#define MY_DEST_MAC0	0xb8
+#define MY_DEST_MAC1	0x27
+#define MY_DEST_MAC2	0xeb
+#define MY_DEST_MAC3	0x08
+#define MY_DEST_MAC4	0x1e
+#define MY_DEST_MAC5	0x20
 
 #define DEFAULT_IF	"eth0"
 #define BUF_SIZ		1024
@@ -86,13 +86,6 @@ int main(int argc, char *argv[])
   /* Packet data */
   for (i = 0 ; i < 4 ; i++)
   	sendbuf[tx_len++] = pkt_data;
-
-/*
-  sendbuf[tx_len++] = pkt_data;
-  sendbuf[tx_len++] = pkt_data;
-  sendbuf[tx_len++] = pkt_data;
-  sendbuf[tx_len++] = pkt_data;
-*/
 
   /* Index of the network device */
   socket_address.sll_ifindex = if_idx.ifr_ifindex;

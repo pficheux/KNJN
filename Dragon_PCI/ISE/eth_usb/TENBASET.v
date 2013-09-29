@@ -156,12 +156,18 @@ always @(posedge CLK_USB) if(~USB_FRDn) USB_rd_blockcnt<=0; else if(~USB_rd_idle
 reg [8:0] USB_rd_adr=0;
 always @(posedge CLK_USB) if(~USB_FRDn) USB_rd_adr<=USB_rd_adr+1'h1; else if(USB_rd_idle) USB_rd_adr<=0;
 
-// 512 bytes RAMs, big enough to store a UPD header (42 bytes) and up to 470 bytes of UDP payload
-wire [7:0] RAM_UDP_rx_data;
-ram8x512 RAM_UDP_rx(
-	.wr_clk(clkRx), .wr_adr(RxBitCount[11:3]), .data_in(RxDataByteIn), .wr_en(RxGoodPacket & RxNewByteAvailable & ~|RxBitCount[13:12]), 
-	.rd_clk(CLK_USB), .rd_adr(USB_rd_adr), .data_out(RAM_UDP_rx_data), .rd_en(1'b1));
+reg RAM_UDP_rxPP = 1'b0;  // rx ping-pong buffer
+always @(posedge clkRx) RAM_UDP_rxPP <= RAM_UDP_rxPP ^ RxPacketReceivedOK;
 
+wire [7:0] RAM_UDP_rx_data0, RAM_UDP_rx_data1;
+ram8x512 RAM_UDP_rx0(  // 512 bytes RAMs, big enough to store a UPD header (42 bytes) and up to 470 bytes of UDP payload
+	.wr_clk(clkRx), .wr_adr(RxBitCount[11:3]), .data_in(RxDataByteIn), .wr_en(RxGoodPacket & RxNewByteAvailable & ~|RxBitCount[13:12] & ~RAM_UDP_rxPP), 
+	.rd_clk(CLK_USB), .rd_adr(USB_rd_adr), .data_out(RAM_UDP_rx_data0), .rd_en(1'b1));
+ram8x512 RAM_UDP_rx1(
+	.wr_clk(clkRx), .wr_adr(RxBitCount[11:3]), .data_in(RxDataByteIn), .wr_en(RxGoodPacket & RxNewByteAvailable & ~|RxBitCount[13:12] &  RAM_UDP_rxPP), 
+	.rd_clk(CLK_USB), .rd_adr(USB_rd_adr), .data_out(RAM_UDP_rx_data1), .rd_en(1'b1));
+
+wire [7:0] RAM_UDP_rx_data = RAM_UDP_rxPP ? RAM_UDP_rx_data0 : RAM_UDP_rx_data1;
 assign USB_D = ~USB_FRDn ? RAM_UDP_rx_data : 8'hZZ;
 
 //////////////////////////////////////////////////////////////////////
@@ -312,35 +318,58 @@ reg RxCRC_CheckNow; always @(posedge clkRx) RxCRC_CheckNow <= RxNewByteAvailable
 reg RxCRC_OK; always @(posedge clkRx) if(RxCRC_CheckNow) RxCRC_OK <= (RxCRC==32'hC704DD7B);
 
 // Check the validity of the packet
+
+// "myPA" - physical address of the FPGA
+// It should be unique on your network
+// A random number should be fine, since the odds of choosing something already existing on your network are really small
+parameter myPA_1 = 8'h5a;	// not broadcast
+parameter myPA_2 = 8'h96;
+parameter myPA_3 = 8'h60;
+parameter myPA_4 = 8'h20;
+parameter myPA_5 = 8'hd4;
+parameter myPA_6 = 8'h39;
+
+// "myIP" - IP of the FPGA
+// Make sure this IP is accessible and not already used on your network
+parameter myIP_1 = 8'd1;
+parameter myIP_2 = 8'd2;
+parameter myIP_3 = 8'd3;
+parameter myIP_4 = 8'd4;
+
 always @(posedge clkRx)
 if(~RxFrame)
 	RxGoodPacket <= 1'h1;
 else
+	RxGoodPacket <= 1'h1;
+/*
 if(RxNewByteAvailable)
 case(RxBitCount[13:3])
 	// verify that the packet MAC address matches our own
-/*	11'h000: if(RxDataByteIn!=myPA_1) RxGoodPacket <= 1'h0;
+	11'h000: if(RxDataByteIn!=myPA_1) RxGoodPacket <= 1'h0;
 	11'h001: if(RxDataByteIn!=myPA_2) RxGoodPacket <= 1'h0;
 	11'h002: if(RxDataByteIn!=myPA_3) RxGoodPacket <= 1'h0;
 	11'h003: if(RxDataByteIn!=myPA_4) RxGoodPacket <= 1'h0;
 	11'h004: if(RxDataByteIn!=myPA_5) RxGoodPacket <= 1'h0;
 	11'h005: if(RxDataByteIn!=myPA_6) RxGoodPacket <= 1'h0;
-*/
-	// verify that's an IP/UDP packet
-  /*
+
+	// verify that's an IP packet
 	11'h00C: if(RxDataByteIn!=8'h08 ) RxGoodPacket <= 1'h0;
 	11'h00D: if(RxDataByteIn!=8'h00 ) RxGoodPacket <= 1'h0;
 	11'h00E: if(RxDataByteIn!=8'h45 ) RxGoodPacket <= 1'h0;
-	11'h017: if(RxDataByteIn!=8'h11 ) RxGoodPacket <= 1'h0;
-   */
+//	11'h00F: if(RxDataByteIn!=8'h00 ) RxGoodPacket <= 1'h0;
+
+//	11'h017: if(RxDataByteIn!=8'h01 ) RxGoodPacket <= 1'h0;  // ICMP packet (ping)
+//	11'h017: if(RxDataByteIn!=8'h11 ) RxGoodPacket <= 1'h0;  // UDP packet
+
 	// verify that's the destination IP matches our IP
-/*	11'h01E: if(RxDataByteIn!=myIP_1) RxGoodPacket <= 1'h0;
+	11'h01E: if(RxDataByteIn!=myIP_1) RxGoodPacket <= 1'h0;
 	11'h01F: if(RxDataByteIn!=myIP_2) RxGoodPacket <= 1'h0;
 	11'h020: if(RxDataByteIn!=myIP_3) RxGoodPacket <= 1'h0;
 	11'h021: if(RxDataByteIn!=myIP_4) RxGoodPacket <= 1'h0;
-*/
+
 	default: ;
 endcase
+*/
 
 wire RxPacketLengthOK = (RxBitCount>=RxBitCount_MinUPDlen);
 always @(posedge clkRx) RxPacketReceivedOK <= RxFrame & Rx_end_of_Ethernet_frame & RxCRC_OK & RxPacketLengthOK & RxGoodPacket;
@@ -350,9 +379,11 @@ reg [nbLED-1:0] LED, RxLED;
 //always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h150) RxLED[0] <= RxNewBit;	 // the payload starts at byte 0x2A (bit 0x150)
 //always @(posedge clkRx) if(RxNewBitAvailable & RxBitCount==14'h151) RxLED[1] <= RxNewBit;
 //always @(posedge clkRx) if(RxPacketReceivedOK) LED <= RxLED;
+
 always @(posedge CLK_USB) LED[0] <= LED[0] ^ USB_wr_packetend;
-always @(posedge clkTx) LED[1] <= LED[1] ^ (StartSending & ~SendingPacket);
-//always @(posedge clkTx) LED[2] <= 0;
+//always @(posedge clkTx) LED[0] <= LED[0] ^ (StartSending & ~SendingPacket);
+
+always @(posedge clkRx) LED[1] <= LED[1] ^ RxPacketReceivedOK;
 
 /////////////////////////////////////////////////
 /*

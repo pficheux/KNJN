@@ -30,3 +30,96 @@ avec le TENBASET.v initial (UDP).
 # ethtool --offload eth0 rx off tx off sg off tso off
 ...
 
+24/8/2013
+=========
+
+Brancher la console RPi et la Dragon sur des bus USB différents !!
+
+RPi => tcpdump -i eth0 icmp
+
+03:21:05.709476 IP 192.168.2.1 > 192.168.2.2: ICMP echo request, id 24616, seq 6
+, length 64                                                                     
+        0x0000:  4500 0054 0000 4000 4001 b555 c0a8 0201  E..T..@.@..U....      
+        0x0010:  c0a8 0202 0800 0da1 6028 0006 078a 1852  ........`(.....R      
+        0x0020:  7b51 0400 0809 0a0b 0c0d 0e0f 1011 1213  {Q..............      
+        0x0030:  1415 1617 1819 1a1b 1c1d 1e1f 2021 2223  .............!"#      
+        0x0040:  2425 2627 2829 2a2b 2c2d 2e2f 3031 3233  $%&'()*+,-./0123      
+        0x0050:  3435 3637                                4567                  
+03:21:05.709601 IP 192.168.2.2 > 192.168.2.1: ICMP echo reply, id 24616, seq 6, 
+length 64                                                                       
+        0x0000:  4500 0054 0e73 0000 4001 e6e2 c0a8 0202  E..T.s..@.......      
+        0x0010:  c0a8 0201 0000 15a1 6028 0006 078a 1852  ........`(.....R      
+        0x0020:  7b51 0400 0809 0a0b 0c0d 0e0f 1011 1213  {Q..............      
+        0x0030:  1415 1617 1819 1a1b 1c1d 1e1f 2021 2223  .............!"#      
+        0x0040:  2425 2627 2829 2a2b 2c2d 2e2f 3031 3233  $%&'()*+,-./0123      
+        0x0050:  3435 3637                                4567         
+
+EeePC => cat /sys/kernel/debug/usb/usbmon/2u
+
+f2d45b80 2554679544 C Bo:2:003:2 0 98 >
+f2d45500 2562274152 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45500 2562275248 C Bo:2:003:2 0 98 >
+f2d45e80 2563283240 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45e80 2563285201 C Bo:2:003:2 0 98 >
+f2d45700 2564283094 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45700 2564284164 C Bo:2:003:2 0 98 >
+f2d45700 2565283084 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45700 2565285132 C Bo:2:003:2 0 98 >
+f2d45e80 2566283093 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45e80 2566285085 C Bo:2:003:2 0 98 >
+f2d45500 2567283074 S Bo:2:003:2 -115 98 = b827eb44 4b2a2616 2a920e61 08004500 00540000 40004001 b555c0a8 0201c0a8
+f2d45500 2567285053 C Bo:2:003:2 0 98 >
+
+Détection EP par usbnet.ko
+
+[ 6092.112697] usbnet_init: starting
+[ 6095.138948] dragon_usbnet_bind
+[ 6095.141682] dragon_usbnet_bind: usbnet_get_ethernet_addr error (-22)
+[ 6095.141693] usbnet_get_endpoints
+[ 6095.141701] usbnet_get_endpoints: tmp= 0
+[ 6095.141708] usbnet_get_endpoints: tmp= 1
+[ 6095.141715] usbnet_get_endpoints: ep= 0
+[ 6095.141722] usbnet_get_endpoints: ep 0 is BULK
+[ 6095.141730] usbnet_get_endpoints: ep= 1
+[ 6095.141736] usbnet_get_endpoints: ep 1 is BULK
+[ 6095.141743] usbnet_get_endpoints: IN is ep 1 => EP 82 et non 86 :(
+[ 6095.141750] usbnet_get_endpoints: ep= 2
+[ 6095.141757] usbnet_get_endpoints: ep 2 is BULK
+[ 6095.141764] usbnet_get_endpoints: OUT is ep 2
+[ 6095.141771] usbnet_get_endpoints: ep= 3
+[ 6095.141778] usbnet_get_endpoints: ep 3 is BULK
+[ 6095.141785] usbnet_get_endpoints: ep= 4
+[ 6095.141792] usbnet_get_endpoints: ep 4 is BULK
+[ 6095.141799] usbnet_get_endpoints: ep= 5
+[ 6095.141806] usbnet_get_endpoints: ep 5 is BULK
+[ 6095.141813] usbnet_get_endpoints: ep= 6
+[ 6095.141820] usbnet_get_endpoints: ep 6 is BULK
+[ 6095.141827] usbnet_get_endpoints: ep= 7
+[ 6095.141833] usbnet_get_endpoints: ep= 8
+[ 6095.141840] usbnet_get_endpoints: ep= 9
+[ 6095.141847] usbnet_get_endpoints: ep= 10
+[ 6095.141853] usbnet_get_endpoints: ep= 11
+[ 6095.141860] usbnet_get_endpoints: ep= 12
+[ 6095.143462] usbnet_get_endpoints: in= 2 out= 2
+[ 6095.145154] dragon_usbnet 2-1:1.0: usb0: register 'dragon_usbnet' at usb-0000:00:1d.0-1, KNJN DragonPCI, 7a:78:8a:d1:82:2b
+
+Modif usbnet.c pour forcer EP 86 => pas mieux
+
+      			  if (!intr && !in && ep == 5) {
+			    printk(KERN_INFO "%s: IN is EP %x (ep = %d) ***", __FUNCTION__, e->desc.bEndpointAddress,ep);
+					in = e;
+			  }
+
+Test LED1 sur RxPacketReceivedOK => bof
+
+always @(posedge clkTx) LED[1] <= LED[1] ^  RxPacketReceivedOK ;
+
+29/9/2013
+=========
+
+- Test du nouveau code JN => OK en émission, mais limitation à 64 octets sur
+Dragon (taille du buffer USB1)
+
+- Suppression du test sur IP/MAC en réception
+
+- Pas de réception sur EP6 (?) => tester sans usbnet

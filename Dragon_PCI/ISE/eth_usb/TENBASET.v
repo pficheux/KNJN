@@ -114,7 +114,7 @@ reg [13:0] RxBitCount;  // 14 bits are enough for a complete Ethernet frame (150
 wire [13:0] RxBitCount_MinUPDlen = (42+18+4)*8;  // smallest UDP packet has 42 bytes (header) + 18 bytes (payload) + 4 bytes (CRC)
 reg [7:0] RxDataByteIn;
 wire RxNewByteAvailable;
-reg RxGoodPacket;
+reg RxGoodPacket = 1'h1; // always good (PF)
 reg RxPacketReceivedOK;
 reg [31:0] RxPacketCount;  always @(posedge clkRx) if(RxPacketReceivedOK) RxPacketCount <= RxPacketCount + 1;
 reg [10:0] TxAddress;
@@ -336,12 +336,16 @@ parameter myIP_2 = 8'd2;
 parameter myIP_3 = 8'd3;
 parameter myIP_4 = 8'd4;
 
+// Don't test IP/MAC addr
+always @(posedge clkRx)
+  RxGoodPacket <= 1'h1;
+
+/*
 always @(posedge clkRx)
 if(~RxFrame)
 	RxGoodPacket <= 1'h1;
+ /*
 else
-	RxGoodPacket <= 1'h1;
-/*
 if(RxNewByteAvailable)
 case(RxBitCount[13:3])
 	// verify that the packet MAC address matches our own

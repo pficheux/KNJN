@@ -7,7 +7,8 @@ myusb	 USB IO8
 usblcd	 USB text LCD
 usbregs	 USB reg banks
 binaries Generated .bit files
-eth_usb	 USB NIC design
+eth_usb	 USB NIC design (in progress...)
+USB_LEDs Read/Write test for USB
 make	 Makefile replacement to ISE GUI
 
 You should use ISE 10.1.03. Installation should be done with the following 

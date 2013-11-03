@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
   tx_len += sizeof(struct ether_header);
 
   /* Packet data */
-  for (i = 0 ; i < 4 ; i++)
+  for (i = 0 ; i < 10 ; i++)
   	sendbuf[tx_len++] = pkt_data;
 
   /* Index of the network device */
@@ -99,6 +99,11 @@ int main(int argc, char *argv[])
   socket_address.sll_addr[4] = MY_DEST_MAC4;
   socket_address.sll_addr[5] = MY_DEST_MAC5;
 
+  printf ("len= %d\n", tx_len);
+  for (i = 0 ; i < tx_len ; i++)
+	printf ("%02x", sendbuf[i] & 255);
+  putchar ('\n');
+	
   /* Send packet */
   if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
     printf("Send failed\n");

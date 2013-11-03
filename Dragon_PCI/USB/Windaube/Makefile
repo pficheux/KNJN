@@ -1,6 +1,6 @@
 CC=  i686-pc-mingw32-gcc
 
-PROGS= USB_IO8.exe USB_regs.exe LCD_Text.exe
+PROGS= USB_IO8.exe USB_regs.exe LCD_Text.exe USB_Read.exe
 
 all: $(PROGS)
 

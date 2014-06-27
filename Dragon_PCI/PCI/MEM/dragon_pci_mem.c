@@ -36,7 +36,7 @@ MODULE_PARM_DESC(debug, "Debug flag (1 = YES, 0 = NO)");
 /*
  * Supported devices
  */
-static struct pci_device_id dragon_pci_mem_id_table[] __devinitdata = {
+static struct pci_device_id dragon_pci_mem_id_table[] = {
   {0x0100, 0x0000, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
   {0,}	/* 0 terminated list */
 };
@@ -66,7 +66,7 @@ struct dragon_pci_mem_struct {
 {
   struct dragon_pci_mem_struct *data = (struct dragon_pci_mem_struct *)dev_id;
 
-//  printk(KERN_INFO "dragon_pci_mem: interrupt from device %d\n", data->minor);
+  printk(KERN_INFO "dragon_pci_mem: interrupt from device %d\n", data->minor);
 
   return IRQ_HANDLED;
 }
@@ -191,7 +191,7 @@ static struct file_operations dragon_pci_mem_fops = {
 /*
  * PCI handling
  */
-static int __devinit dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id *ent)
 {
   int i, ret = 0;
   struct dragon_pci_mem_struct *data;
@@ -305,7 +305,7 @@ cleanup_kmalloc:
   return ret;
 }
 
-static void __devexit dragon_pci_mem_remove(struct pci_dev *dev)
+static void dragon_pci_mem_remove(struct pci_dev *dev)
 {
   int i;
   struct dragon_pci_mem_struct *data = pci_get_drvdata(dev);

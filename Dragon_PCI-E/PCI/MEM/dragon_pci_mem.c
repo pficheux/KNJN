@@ -17,6 +17,7 @@
 #include <linux/fs.h>		/* file_operations */
 #include <linux/interrupt.h>	/* request_irq etc */
 #include <linux/version.h>
+#include <linux/device.h>	/* class */
 
 MODULE_DESCRIPTION("dragon_pci_mem");
 MODULE_AUTHOR("Pierre Ficheux");
@@ -33,6 +34,9 @@ static int debug = 0;
 module_param(debug, int, 0660);
 MODULE_PARM_DESC(debug, "Debug flag (1 = YES, 0 = NO)");
 
+// Driver class in /sys
+static struct class *pcidemo_class;
+
 /*
  * Supported devices
  */
@@ -40,7 +44,7 @@ MODULE_PARM_DESC(debug, "Debug flag (1 = YES, 0 = NO)");
 #define XILINX_ID    0x10ee
 #define VIRTEX5_ID   0x0007
 
-static struct pci_device_id dragon_pci_mem_id_table[] __devinitdata = {
+static struct pci_device_id dragon_pci_mem_id_table[] = {
   {XILINX_ID, VIRTEX5_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
   {0,}	/* 0 terminated list */
 };
@@ -193,14 +197,15 @@ static struct file_operations dragon_pci_mem_fops = {
 /*
  * PCI handling
  */
-static int __devinit dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id *ent)
 {
   int i, ret = 0;
   struct dragon_pci_mem_struct *data;
   static int minor = 0;
   u8 mypin;
+  struct device *device = NULL;
 
-  printk(KERN_INFO "dragon_pci_mem: found %x:%x\n", ent->vendor, ent->device);
+  printk(KERN_INFO "dragon_pci_mem: found %04x:%04x\n", ent->vendor, ent->device);
   printk(KERN_INFO "dragon_pci_mem: using major %d and minor %d for this device\n", major, minor);
 
   /* Allocate a private structure and reference it as driver's data */
@@ -290,6 +295,15 @@ static int __devinit dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_
   /* Link the new data structure with others */
   list_add_tail(&data->link, &dragon_pci_mem_list);
 
+  // add device to class
+  device = device_create(pcidemo_class, NULL, MKDEV(major, data->minor), NULL, "dragon_pci_mem" "%d", data->minor);
+
+  if (IS_ERR(device)) {
+    ret = PTR_ERR(device);
+    printk(KERN_WARNING "dragon_pci_mem: can't create device %d\n", data->minor);
+    goto cleanup_irq;
+  }
+
   return 0;
 
 cleanup_irq:
@@ -307,7 +321,7 @@ cleanup_kmalloc:
   return ret;
 }
 
-static void __devexit dragon_pci_mem_remove(struct pci_dev *dev)
+static void dragon_pci_mem_remove(struct pci_dev *dev)
 {
   int i;
   struct dragon_pci_mem_struct *data = pci_get_drvdata(dev);
@@ -326,6 +340,8 @@ static void __devexit dragon_pci_mem_remove(struct pci_dev *dev)
     free_irq(dev->irq, data);
 
   list_del(&data->link);
+
+  device_destroy(pcidemo_class, MKDEV(major, data->minor));
 
   kfree(data);
 
@@ -346,7 +362,7 @@ static int __init dragon_pci_mem_init(void)
 {
   int ret;
 
-  /* Register the device driver */
+  /* Register the device driver major */
   ret = register_chrdev(major, "dragon_pci_mem", &dragon_pci_mem_fops);
   if (ret < 0) {
     printk(KERN_WARNING "dragon_pci_mem: unable to get a major\n");
@@ -356,6 +372,15 @@ static int __init dragon_pci_mem_init(void)
 
   if (major == 0)
     major = ret; /* dynamic value */
+
+  // Class creation in /sys/class
+  pcidemo_class = class_create (THIS_MODULE, "pcidemo");
+  if (IS_ERR(pcidemo_class)) {
+    ret = PTR_ERR(pcidemo_class);
+    printk(KERN_WARNING "dragon_pci_mem: can't create class !\n");
+
+    return ret;
+  }
 
   /* Register PCI driver */
   ret = pci_register_driver(&dragon_pci_mem_driver);
@@ -373,7 +398,7 @@ static int __init dragon_pci_mem_init(void)
 static void __exit dragon_pci_mem_exit(void)
 {
   pci_unregister_driver(&dragon_pci_mem_driver);
-
+  class_destroy(pcidemo_class);
   unregister_chrdev(major, "dragon_pci_mem");
 }
 

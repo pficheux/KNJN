@@ -38,7 +38,7 @@ MODULE_PARM_DESC(major, "Debug flag (1 = YES, 0 = NO)");
 /*
  * Supported devices
  */
-static struct pci_device_id dragon_pci_io_id_table[] __devinitdata = {
+static struct pci_device_id dragon_pci_io_id_table[] = {
   {0x0100, 0x0000, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
   {0,}	/* 0 terminated list */
 };
@@ -206,7 +206,7 @@ static struct file_operations dragon_pci_io_fops = {
 /*
  * PCI handling
  */
-static int __devinit dragon_pci_io_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+static int dragon_pci_io_probe(struct pci_dev *dev, const struct pci_device_id *ent)
 {
   int i, ret = 0;
   struct dragon_pci_io_struct *data;
@@ -296,7 +296,7 @@ static int __devinit dragon_pci_io_probe(struct pci_dev *dev, const struct pci_d
   return ret;
 }
 
-static void __devexit dragon_pci_io_remove(struct pci_dev *dev)
+static void dragon_pci_io_remove(struct pci_dev *dev)
 {
   struct dragon_pci_io_struct *data = pci_get_drvdata(dev);
   u8 mypin;

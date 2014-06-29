@@ -123,3 +123,25 @@ Dragon (taille du buffer USB1)
 - Suppression du test sur IP/MAC en réception
 
 - Pas de réception sur EP6 (?) => tester sans usbnet
+
+28/6/2014
+=========
+
+- Adaption pilote PCI à DragonPCI-E, utilisation de la BAR 0
+
+# insmod dragon_pci_mem.ko
+# dmesg
+[ 3891.510203] dragon_pci_mem: found 10ee:0007
+[ 3891.510208] dragon_pci_mem: using major 250 and minor 0 for this device
+[ 3891.510232] dragon_pci_mem 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[ 3891.510242] dragon_pci_mem: BAR 0 (0xfe2ff000-0xfe2fffff), len=4096, flags=0x040200
+[ 3891.510246] NOT cacheable ! 
+[ 3891.510264] dragon_pci_mem: I/O memory has been remaped at 0xf7e3e000
+[ 3891.510269] dragon_pci_mem: BAR 6 (0xfe300000-0xfe3fffff), len=1048576, flags=0x04e200
+[ 3891.510272] cacheable ! 
+[ 3891.510595] dragon_pci_mem: I/O memory has been remaped at 0xfa500000
+
+# cat /etc/issue > /dev/dragon_pci_mem0
+# cat /dev/dragon_pci
+Fedora release 14 (Laughlin)
+Kernel \r on an \m (\l)L

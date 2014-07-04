@@ -282,7 +282,10 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   /* Install the irq handler */
   pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
   if (mypin) {
-    ret = request_irq(dev->irq, dragon_pci_mem_irq_handler, IRQF_SHARED, "dragon_pci_mem", data);
+    if (pci_enable_msi (dev))
+      printk(KERN_WARNING "dragon_pci_mem: unable to init MSI !\n");
+
+    ret = request_irq(dev->irq, dragon_pci_mem_irq_handler, 0/*IRQF_SHARED*/, "dragon_pci_mem", data);
     if (ret < 0) {
       printk(KERN_WARNING "dragon_pci_mem: unable to register irq handler\n");
 
@@ -333,11 +336,14 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
   }
 
   pci_release_regions(dev);
-  pci_disable_device(dev);
 
   pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
-  if (mypin)
+  if (mypin) {
+    pci_disable_msi(dev);
     free_irq(dev->irq, data);
+  }
+
+  pci_disable_device(dev);
 
   list_del(&data->link);
 

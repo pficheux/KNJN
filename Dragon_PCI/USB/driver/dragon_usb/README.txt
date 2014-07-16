@@ -7,6 +7,11 @@ LED3    (close to Ethernet)
 by sending hex value to Dragon through the driver. You can also control text LCD (HD44780) as
 described in http://www.knjn.com/FPGA-PCI-LCD.html.
 
+First you should load firmware then design with 'dragon-ctrl' :
+
+# dragon-ctrl -i firmware.hex reboot
+# dragon-ctrl -b USB_IO8.bit program
+
 
 You can compile the driver with :
 

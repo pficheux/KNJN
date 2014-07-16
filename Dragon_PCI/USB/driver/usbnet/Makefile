@@ -4,7 +4,7 @@ KDIR= /lib/modules/$(shell uname -r)/build
 
 PWD= $(shell pwd)
 
-obj-m := dragon_usbnet.o usbnet.o
+obj-m := dragon_usbnet.o
 
 all: sendRawEth recvRawEth
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules

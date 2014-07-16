@@ -271,7 +271,7 @@ static int __init usb_dragon_usb_init(void)
 
   retval = usb_register(&dragon_usb_driver);
   if (retval) {
-    err("usb_register failed. Error number %d", retval);
+    printk (KERN_WARNING "usb_register failed. Error number %d", retval);
     return retval;
   }
 

@@ -11,14 +11,18 @@
 
 #define USB_STATUS_OK 0
 
-/*
-void the_end (libusb_device *dev, struct libusb_configure_descriptor *desc) 
+void end1 (libusb_device_handle *dev) 
 {
-  libusb_free_config_descriptor(desc);
   libusb_close (dev);
   libusb_exit (NULL);
 }
-*/
+
+void end2 (libusb_device_handle *dev, struct libusb_config_descriptor *desc) 
+{
+  libusb_free_config_descriptor(desc);
+  end1 (dev);
+}
+
 
 int main (int ac, char **av)
 {
@@ -30,8 +34,7 @@ int main (int ac, char **av)
   /*==============================*/
   /*======== init libusb =========*/
   /*==============================*/
-  status = libusb_init(NULL);
-  if (status != USB_STATUS_OK) {
+  if ((status = libusb_init(NULL)) != USB_STATUS_OK) {
     fprintf (stderr, "libusb_init error, status= %d\n", status);
     exit (1);
   }
@@ -40,32 +43,27 @@ int main (int ac, char **av)
   /*=================================*/
   /*======== find/open USB device ===*/
   /*=================================*/
-  handle  = libusb_open_device_with_vid_pid(NULL, VENDOR_ID, PRODUCT_ID);
-  if (handle == NULL)
+  if ((handle = libusb_open_device_with_vid_pid(NULL, VENDOR_ID, PRODUCT_ID)) == NULL)
     {
       fprintf (stderr, "Could not find/open device\n");
       libusb_exit (NULL);
       exit (1);
     }
 	
-  device = libusb_get_device (handle);	
-  if(device == NULL)	
+  if ((device = libusb_get_device (handle)) == NULL)
     {
       fprintf(stderr, "Could not get device\n");
-      libusb_close(handle);
-      libusb_exit(NULL);
+      end1 (handle);
       exit (1);		
     }
 	
   /*=========================================*/
   /*======== Get the configure desc =========*/
   /*=========================================*/
-  status = libusb_get_active_config_descriptor(device, &configure_descriptor);
-  if (status != USB_STATUS_OK) 
+  if ((status = libusb_get_active_config_descriptor(device, &configure_descriptor)) != USB_STATUS_OK)
     {
       fprintf (stderr, "Failed to get configure descriptor, status= %d\n", status);
-      libusb_close(handle);
-      libusb_exit(NULL);
+      end1 (handle);
       exit (1);
     }
 	
@@ -74,32 +72,32 @@ int main (int ac, char **av)
   /*==========================================================================*/			
   if (libusb_kernel_driver_active(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber) == 1) 
     {
-      status = libusb_detach_kernel_driver(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber);
-      if (status != USB_STATUS_OK) 
+      if ((status = libusb_detach_kernel_driver(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber)) != USB_STATUS_OK)
 	{
 	  fprintf(stderr, "Failed to detach kernel driver, status= %d\n", status);
-	  libusb_free_config_descriptor(configure_descriptor);
-	  libusb_close(handle);
-	  libusb_exit(NULL);
-	  return 1;
+	  end2 (handle, configure_descriptor);
+	  exit (1);
 	}
     }
 
   /*=================================================*/
   /*======== Interface claim before any transfert  ==*/
   /*=================================================*/
-  status = libusb_claim_interface(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber);	
-  if(status != USB_STATUS_OK)
+  if ((status = libusb_claim_interface(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber)) != USB_STATUS_OK)
     {
-      printf("error interface claim, error= %d\n", status);
-      libusb_free_config_descriptor(configure_descriptor);
-      libusb_close(handle);
-      libusb_exit(NULL);
+      fprintf(stderr, "error interface claim, error= %d\n", status);
+      end2 (handle, configure_descriptor);
       exit (1);
     }
 
-  libusb_set_interface_alt_setting(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber, 1);
+  if ((status = libusb_set_interface_alt_setting(handle, configure_descriptor->interface[0].altsetting[0].bInterfaceNumber, 1)) != USB_STATUS_OK)
+    {
+      fprintf(stderr, "error alt setting, error= %d\n", status);
+      end2 (handle, configure_descriptor);
+      exit (1);
+    }
 
+  /* blink leds about 100 times */
   for (i = 0 ; i <= 100 ; i++) {
     int transferred;
 
@@ -109,9 +107,7 @@ int main (int ac, char **av)
     usleep (100000);
   }
 
-  libusb_free_config_descriptor(configure_descriptor);
-  libusb_close(handle);
-  libusb_exit(NULL);
+  end2 (handle, configure_descriptor);
 
   return 0;
 }

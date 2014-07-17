@@ -453,5 +453,60 @@ Dumping 37 bytes of RAM at 0x1000:
   0x0000 48656c6c6f2c2077 6f726c6421205468 697320697320796f 7572204658322062    Hello, world! This is your FX2 b
   0x0020 6f6172642e                                                             oard.
 
+17/7/2014
+=========
 
+- Test affectation LED aux données d'écriture
 
+Dans PCIe.v => assign LED = LEDs;
+
+* Test
+
+Allumage LED V3 :
+
+# ./dragon_pci_test /dev/dragon_pci_mem0 0 2 1 0
+Write+read 2 long-word(s) starting @ 0x00000000, value is 0x00000001, increment is 0x00000000
+
+buf[0] = 0x00000001
+buf[1] = 0x00000001
+Wrote 8 chars @00000000
+
+Read 8 chars @00000000
+buf[0] = 0x00000001
+buf[1] = 0x00000001
+
+Extinction LED V3 :
+
+# ./dragon_pci_test /dev/dragon_pci_mem0 0 2 0 0
+Write+read 2 long-word(s) starting @ 0x00000000, value is 0x00000000, increment is 0x00000000
+
+buf[0] = 0x00000000
+buf[1] = 0x00000000
+Wrote 8 chars @00000000
+
+Read 8 chars @00000000
+buf[0] = 0x00000000
+buf[1] = 0x00000000
+
+- Affectation de la même donnée à une GPIO (V15) qui reproduit la led V3
+
+assign gpio_output = LEDs[0]; 
+
+Script d'affichage périodique :
+
+#!/bin/sh
+#
+# led + GPIO blinking 
+#
+X=0
+
+while [ 1 ]
+do
+    ./dragon_pci_test /dev/dragon_pci_mem0 0 2 $X 0
+    X=$(expr $X + 1)
+    usleep 100000
+done
+
+# ./test_gpio.sh > /dev/null
+
+=> ajouter une option "quiet" à "dragon_pci_test"...

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Send a string to Dragon board through USB Linux driver
 #

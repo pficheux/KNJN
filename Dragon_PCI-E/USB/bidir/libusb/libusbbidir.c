@@ -1,3 +1,22 @@
+/*
+ * USB bidir test for KNJN Dragon-E
+ *
+ *   Copyright (C) 2014 Pierre Ficheux (pierre.ficheux@gmail.com)
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -23,14 +42,13 @@ void end2 (libusb_device_handle *dev, struct libusb_config_descriptor *desc)
   end1 (dev);
 }
 
-
 int main (int ac, char **av)
 {
   libusb_device *device;
   libusb_device_handle *handle;
   struct libusb_config_descriptor *configure_descriptor;
-  int err, i, status;
-  char buf[5];
+  int err, status, l;
+  unsigned char buf[5];
 
   /*==============================*/
   /*======== init libusb =========*/
@@ -39,7 +57,6 @@ int main (int ac, char **av)
     fprintf (stderr, "libusb_init error, status= %d\n", status);
     exit (1);
   }
-
 
   /*=================================*/
   /*======== find/open USB device ===*/
@@ -98,23 +115,19 @@ int main (int ac, char **av)
       exit (1);
     }
 
+
+  /*
+   * Send 5 bytes, board replies 1 byte incremented by 5 each time we use the program
+   */
   memset (buf, 0, sizeof(buf));
 
-  /* blink leds about 100 times */
-  for (i = 0 ; i <= 100 ; i++) {
-    int transferred;
-    unsigned char reply;
-    
-    if ((err = libusb_bulk_transfer(handle, 0x02, (unsigned char *)buf, 5, &transferred, 5000)))
-      fprintf (stderr, "libusb_bulk_transfert error= %d\n", err);
-
-    if ((err = libusb_interrupt_transfer(handle, 0x86, &reply, 1, &transferred, 5000)))
-      fprintf (stderr, "libusb_interrupt_transfert error= %d\n", err);
-
-    printf ("reply = %x\n", reply);
-
-    sleep (1);
-  }
+  if ((err = libusb_bulk_transfer(handle, 0x02, buf, 5, &l, 5000)))
+    fprintf (stderr, "libusb_bulk_transfert error= %d\n", err);
+  
+  if ((err = libusb_bulk_transfer(handle, 0x86, buf, 5, &l, 5000)))
+    fprintf (stderr, "libusb_bulk_transfert error= %d\n", err);
+  
+  printf ("len= %d, reply = %d\n", l, buf[0]);
 
   end2 (handle, configure_descriptor);
 

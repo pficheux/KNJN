@@ -1,7 +1,7 @@
 /*
  * Linux USB driver for KNJN Dragon-E
  *
- *   Copyright (C) 2014 Pierre Ficheux (pierre.ficheux@gmail.com)
+ *   Copyright (C) 2011-2014 Pierre Ficheux (pierre.ficheux@gmail.com)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

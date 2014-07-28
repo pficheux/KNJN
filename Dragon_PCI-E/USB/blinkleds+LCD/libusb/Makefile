@@ -1,15 +1,12 @@
 CC=gcc
 CFLAGS= -Wall
 
-PROG=  libusbleds
+PROGS=  libusblcd libusbleds
 
-OBJS= libusbleds.o
-
-
-all: $(PROG)
+all: $(PROGS)
 
 clean: 
-	rm -f *~ $(OBJS) $(PROG)
+	rm -f *~ $(PROGS)
 
-$(PROG) : $(OBJS)
-	$(CC) -o $@ $(OBJS) -lusb-1.0
+.c :
+	$(CC) -o $@ $< -lusb-1.0

@@ -8,7 +8,7 @@ blinkleds+LCD	    Leds + text LCD example
 HDL		    Hardware design
 utils		    The 'cycfx2prog' utility
 
-DragonPCI needs a firmware to load in FX2 USB interface. That firmware is
+DragonPCI-E needs a firmware to load in FX2 USB interface. That firmware is
 copyrighted by KNJN and *not* available with the Linux examples.
 
 If you get firmware (FX2_init.hex) from KNJN, you can load it with the 

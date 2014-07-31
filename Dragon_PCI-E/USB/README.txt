@@ -8,6 +8,8 @@ blinkleds+LCD	    Leds + text LCD example
 HDL		    Hardware design
 utils		    The 'cycfx2prog' utility
 
+Most of examples are provided as kernel driver and libusb (1.x) program.
+
 DragonPCI-E needs a firmware to load in FX2 USB interface. That firmware is
 copyrighted by KNJN and *not* available with the Linux examples.
 

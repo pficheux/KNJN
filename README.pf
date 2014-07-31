@@ -579,3 +579,10 @@ ffff8801e51140c0 2994507652 C Bi:3:019:6 0 1 = 0a
 =========
 
 - Adaptation à libusb -> OK
+
+- écriture pilote noyau -> OK
+
+31/7/2014
+=========
+
+- Modif FX2_bidir pour gérer 1 GPIO en entrée sur V15 (cf RPi) => incrémentation du nbre d'octets reçus *si* GPIO ON ou absente

@@ -586,3 +586,8 @@ ffff8801e51140c0 2994507652 C Bi:3:019:6 0 1 = 0a
 =========
 
 - Modif FX2_bidir pour gérer 1 GPIO en entrée sur V15 (cf RPi) => incrémentation du nbre d'octets reçus *si* GPIO ON ou absente
+
+1/8/2014
+========
+
+- Ajout d'un design FX2_gpio pour lire la valeur de 2 GPIO connectées à V15 et U14

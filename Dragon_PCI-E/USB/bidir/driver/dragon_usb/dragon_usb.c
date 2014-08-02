@@ -42,6 +42,10 @@ struct usb_dragon_usb {
 // Forward declaration 
 static struct usb_driver dragon_usb_driver;
 
+static int cnt = 5;
+
+module_param(cnt, int, 0644);
+
 /* Table of devices that work with this driver */
 static struct usb_device_id id_table [] = {
   { USB_DEVICE(VENDOR_ID, PRODUCT_ID) },
@@ -53,21 +57,20 @@ MODULE_DEVICE_TABLE (usb, id_table);
 int dragon_get_reply (struct usb_dragon_usb *mydev)
 {
   int ret = 0, l;
-  unsigned char buf[5];
+  unsigned char buf[BUF_SIZE];
 
-  memset (buf, 0, sizeof(buf));
+  memset (buf, 0, cnt);
 
-  // Send 5 bytes to EP 2
-  ret = usb_interrupt_msg  (mydev->udev, usb_sndbulkpipe(mydev->udev, 2), buf, sizeof(buf), &l, 2 * HZ);
+  // Send cnt bytes to EP 2
+  ret = usb_interrupt_msg  (mydev->udev, usb_sndbulkpipe(mydev->udev, 2), buf, cnt, &l, 2 * HZ);
   if (ret < 0)
     printk (KERN_WARNING "dragon_set_ledmask: usb_bulk_msg() error %d\n", ret);
 
   // Get answer from EP 5, board should add 5 each time driver is used
-  ret = usb_interrupt_msg  (mydev->udev, usb_rcvbulkpipe(mydev->udev, 6), buf, sizeof(buf), &l, 2 * HZ);
+  ret = usb_interrupt_msg  (mydev->udev, usb_rcvbulkpipe(mydev->udev, 6), buf, cnt, &l, 2 * HZ);
   if (ret < 0)
     printk (KERN_WARNING "dragon_set_ledmask: usb_bulk_msg() error %d\n", ret);
 
-  printk ("reply= %d\n", buf[0]);
   mydev->reply = buf[0];
 
   return ret;

@@ -2,8 +2,9 @@
 // (c) fpga4fun.com KNJN LLC - 2006, 2007
 
 // This example shows how to send and receive data from USB-2
+// Modified by PF: return GPIO value (V15, U14)
 
-module FX2_bidir(
+module FX2_gpio(
 	FX2_CLK, FX2_FD, FX2_SLRD, FX2_SLWR, FX2_flags, 
 	FX2_PA_2, FX2_PA_3, FX2_PA_4, FX2_PA_5, FX2_PA_6, FX2_PA_7, gpio_input
 );
@@ -21,7 +22,7 @@ output FX2_PA_4;
 output FX2_PA_5;
 output FX2_PA_6;
 input FX2_PA_7;
-input gpio_input;
+input [1:0] gpio_input;
 
    
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,14 +82,10 @@ endcase
 assign FIFO_FIFOADR = {state[2], 1'b0};  // FIFO2 or FIFO4
 assign FIFO_RD = (state==3'b001);
 
-// count the number of bytes received
-reg [7:0] cnt;
+// return GPIO mask
 wire read_byte = (state==3'b001) & FIFO2_data_available;
-// PF increment cnt if ~gpio_input
-always @(posedge FIFO_CLK) if(read_byte && ~gpio_input) cnt <= cnt+8'h1;
 
-// now write the count back
-assign FIFO_DATAOUT = cnt;
+assign FIFO_DATAOUT = gpio_input[0] + (gpio_input[1] << 1);
 assign FIFO_WR = (state==3'b101);
 assign FIFO_PKTEND = (state==3'b110);
 assign FIFO_DATAIN_OE = ~state[2];

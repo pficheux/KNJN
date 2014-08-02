@@ -1,6 +1,8 @@
 /*
  * USB bidir test for KNJN Dragon-E
  *
+ * # libusbbidir [# of bytes] (default is 5)
+ *
  *   Copyright (C) 2014 Pierre Ficheux (pierre.ficheux@gmail.com)
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -47,7 +49,7 @@ int main (int ac, char **av)
   libusb_device *device;
   libusb_device_handle *handle;
   struct libusb_config_descriptor *configure_descriptor;
-  int err, status, l;
+  int err, status, l, n;
   unsigned char buf[5];
 
   /*==============================*/
@@ -117,17 +119,22 @@ int main (int ac, char **av)
 
 
   /*
-   * Send 5 bytes, board replies 1 byte incremented by 5 each time we use the program
+   * Send n bytes, board replies 1 byte incremented by n each time we use the program
    */
-  memset (buf, 0, sizeof(buf));
+  if (ac >= 2)
+	n = atoi(av[1]);
+  else 
+	n = 5;
 
-  if ((err = libusb_bulk_transfer(handle, 0x02, buf, 5, &l, 5000)))
+  memset (buf, 0, n);
+
+  if ((err = libusb_bulk_transfer(handle, 0x02, buf, n, &l, 5000)))
     fprintf (stderr, "libusb_bulk_transfert error= %d\n", err);
   
-  if ((err = libusb_bulk_transfer(handle, 0x86, buf, 5, &l, 5000)))
+  if ((err = libusb_bulk_transfer(handle, 0x86, buf, n, &l, 5000)))
     fprintf (stderr, "libusb_bulk_transfert error= %d\n", err);
   
-  printf ("len= %d, reply = %d\n", l, buf[0]);
+  printf ("reply = %d\n", buf[0]);
 
   end2 (handle, configure_descriptor);
 

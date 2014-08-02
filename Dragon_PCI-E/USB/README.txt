@@ -5,7 +5,6 @@ Here are some Linux examples for DragonPCI-E USB interface
 
 bidir	      	    bidirectionnal example
 blinkleds+LCD	    Leds + text LCD example
-HDL		    Hardware design
 utils		    The 'cycfx2prog' utility
 
 Most of examples are provided as kernel driver and libusb (1.x) program.

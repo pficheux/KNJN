@@ -5,13 +5,15 @@
 
 module FX2_bidir(
 	FX2_CLK, FX2_FD, FX2_SLRD, FX2_SLWR, FX2_flags, 
-	FX2_PA_2, FX2_PA_3, FX2_PA_4, FX2_PA_5, FX2_PA_6, FX2_PA_7
+	FX2_PA_2, FX2_PA_3, FX2_PA_4, FX2_PA_5, FX2_PA_6, FX2_PA_7,
+	LED3
 );
 
 input FX2_CLK;
 inout [7:0] FX2_FD;
 input [2:0] FX2_flags;
 output FX2_SLRD, FX2_SLWR;
+output LED3;
 
 //output FX2_PA_0;
 //output FX2_PA_1;
@@ -85,6 +87,10 @@ reg [7:0] cnt;
 wire read_byte = (state==3'b001) & FIFO2_data_available;
 always @(posedge FIFO_CLK) if(read_byte) cnt <= cnt+8'h1;
 
+// change blinking period on cnt parity
+reg [31:0] cnt2;
+always @(posedge FIFO_CLK) cnt2 <= cnt2 + 32'h1;
+assign LED3 = cnt2[22+ 2 * (cnt % 2)];
 // now write the count back
 assign FIFO_DATAOUT = cnt;
 assign FIFO_WR = (state==3'b101);

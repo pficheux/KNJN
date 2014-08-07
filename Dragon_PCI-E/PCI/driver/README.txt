@@ -1,10 +1,15 @@
-KNJN DragonPCI-E Linux drivers
-==============================
+KNJN DragonPCI-E Linux driver
+=============================
 
 1- Introduction
 
-Driver works with HDL/PCIe.bit design, based on http://www.knjn.com/privatefiles/FX2/FPGAproject_PCIE_FullExample.rar or http://www.fpga4fun.com/PCI-Express5.html .
+Driver works with HDL/PCIe.bit design, based on :
 
+http://www.knjn.com/private_files/FX2/FPGAproject_PCIE_FullExample.rar 
+
+ or 
+
+http://www.fpga4fun.com/PCI-Express5.html
 
 2- Building driver
 
@@ -50,7 +55,17 @@ Because of design limitation (?) interrupt handling won't work after removing/lo
 
 5- Leds and GPIO
 
-TBC
+You can use 'dragon_pci_test' program to control V2/V3 leds.
+
+# dragon_pci_test /dev/dragon_pci_mem0 0 2 <led_mask> 0
+
+where <led_mask> is 0, 1, 2, 3, ...
+
+A GPIO output is available (pin V15)  and value is same as LED[0] (pin V3).
+
+6- Text LCD
+
+Text LCD is supported by default design, just try 'lcd_test.sh' (based on 'dragon_pci_test') in driver directory.
 
 
 

@@ -599,5 +599,8 @@ assign LED = cnt2[22 + 2 * (cnt % 2)];
 7/8/2014
 ========
 
-Test support LCD texte avec PCI-E -> driver/lcd_test.sh
+- Test support LCD texte avec PCI-E -> driver/lcd_test.sh
+
+- Test TR sur PCI-E + GPIO
+
 

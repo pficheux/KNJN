@@ -585,9 +585,19 @@ ffff8801e51140c0 2994507652 C Bi:3:019:6 0 1 = 0a
 31/7/2014
 =========
 
-- Modif FX2_bidir pour gérer 1 GPIO en entrée sur V15 (cf RPi) => incrémentation du nbre d'octets reçus *si* GPIO ON ou absente
+- Modif FX2_bidir pour gérer 1 GPIO en entrée sur V15 (cf RPi) => incrémentation du nbre d'octets reçus *si* GPIO ON ou absente -> HDL/gpio_in
+
+- Ajout d'une LED représentant la parité de l'octet reçu -> HDL/cnt
+
+assign LED = cnt2[22 + 2 * (cnt % 2)];
 
 1/8/2014
 ========
 
 - Ajout d'un design FX2_gpio pour lire la valeur de 2 GPIO connectées à V15 et U14
+
+7/8/2014
+========
+
+Test support LCD texte avec PCI-E -> driver/lcd_test.sh
+

@@ -82,7 +82,8 @@ irqreturn_t dragon_pci_mem_irq_handler(int irq, void *dev_id)
 {
   struct dragon_pci_mem_struct *data = (struct dragon_pci_mem_struct *)dev_id;
 
-  printk(KERN_INFO "dragon_pci_mem: interrupt from device %d\n", data->minor);
+  if (debug)
+    printk(KERN_INFO "dragon_pci_mem: interrupt from device %d\n", data->minor);
 
   return IRQ_HANDLED;
 }

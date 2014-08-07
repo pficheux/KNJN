@@ -20,8 +20,9 @@ module PCIe
    // Text LCD
 	LED,
 	LCD_RS, LCD_E, LCD_DB,
-	//
-	gpio_output
+	LCD_RW,
+	gpio_output, 
+	LED3
 );
 
 output pci_exp_txp, pci_exp_txn;
@@ -34,8 +35,10 @@ input  sys_reset_n;
 output  gpio_output;
 
 output LCD_RS, LCD_E;
+output LCD_RW;
 output [7:0] LCD_DB;
 output [1:0] LED;
+output LED3;
 
 wire        sys_clk_c;
 wire        sys_reset_n_c; 
@@ -84,9 +87,17 @@ wire cfg_interrupt_msienable_c;
 
 reg [1:0] LEDs;
 always @(posedge clk) if(RXwrite) LEDs <= RXdatawr[1:0];
-//assign LED = LEDs ^ {cfg_interrupt_msienable_c ? cnt[21] : 1'b0, ~cfg_interrupt_msienable_c ? cnt[23] : 1'b0};
+
 assign LED = LEDs;
+// GPIO is copy of LED0
 assign gpio_output = LEDs[0];   
+
+// blinking led close to USB
+reg [31:0] cnt2;
+always @(posedge clk) cnt2 <= cnt2 + 32'h1;
+
+// blink faster if MSI enabled
+assign LED3 = (cfg_interrupt_msienable_c ? cnt2[22] : cnt2[24]);
 
 assign trn_rdst_rdy_n_c = 1'b0;
 assign trn_tsrc_dsc_n_c = 1'b1;
@@ -116,17 +127,9 @@ function [31:0] SwapDWB;
 	SwapDWB = {DW[7:0], DW[15:8], DW[23:16], DW[31:24]};
 endfunction
 
-
-//wire cfg_interrupt_n_c = cnt[15]; //cnt[20] & ~cnt[22];
-//wire cfg_interrupt_n_c = ~&cnt[25:0];
 // IRQ every 1 sec
-//wire cfg_interrupt_n_c = ~(&cnt[25:0] & cfg_interrupt_msienable_c);
-// IRQ
 wire cfg_interrupt_n_c = ~(&cnt[25:0] & cfg_interrupt_msienable_c);
-// OK
-//assign gpio_output = cnt[15];
-//assign gpio_output = ~RXwrite;
-//wire cfg_interrupt_n_c = 1'b1;
+
 wire cfg_interrupt_assert_n_c = 1'b1;
 wire [7:0] cfg_interrupt_di_c = 8'b0;
 wire [63:0] cfg_dsn_n_c = {32'h00000001, {{8'h1},24'h000A35}};
@@ -138,6 +141,7 @@ reg [7:0] LCD_DB;  always @(posedge clk) if(RXwrite) LCD_DB <= RXdatawr;
 // to generate a long pulse for the LCD_E signal, we use a counter
 reg [5:0] LCDcnt;  always @(posedge clk) if(RXwrite || |LCDcnt) LCDcnt<=LCDcnt+6'h1;
 assign LCD_E = LCDcnt[5] ^ LCDcnt[4];
+assign LCD_RW = 1'b0;	// always write to (and never read from) the LCD
 
 // Memory
 reg [31:0] mem [0:1023];

@@ -54,7 +54,7 @@ void got_sigint (int sig)
 void got_sigalrm (int sig)
 {
   // goto addr 0
-  lseek (fd, SEEK_SET, 0);
+  lseek (fd, 0, SEEK_SET);
 
   // build data then write
   buf[0] = buf[4] = nibl;

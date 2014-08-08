@@ -601,6 +601,72 @@ assign LED = cnt2[22 + 2 * (cnt % 2)];
 
 - Test support LCD texte avec PCI-E -> driver/lcd_test.sh
 
-- Test TR sur PCI-E + GPIO
+- Test TR sur PCI-E + GPIO out
 
+8/8/2014
+========
 
+- Test GPIO in rebouclée sur GPIO out => OK après résolution du pb de soudure :(
+
+- Test IRQ produite par GPIO in (thx to KNJN for the Verilog code !!)
+
+- Mesure IRQ avec Ftrace, GPIO in = 50Hz (T=20 ms)
+
+# mount -t debugfs debugfs /sys/kernel/debug/
+# cd /sys/kernel/debug/tracing/
+# echo 0 > tracing_on 
+# echo function > current_tracer
+# echo dragon_pci_mem_irq_handler > set_ftrace_filter
+#echo latency-format > trace_options
+# echo 1 > tracing_on 
+...
+# echo 0 > tracing_on 
+
+# tracer: function
+#
+# function latency trace v1.1.5 on 2.6.35.14-106.fc14.i686
+# --------------------------------------------------------------------
+# latency: 0 us, #377/377, CPU#1 | (M:desktop VP:0, KP:0, SP:0 HP:0 #P:2)
+#    -----------------
+#    | task: -0 (uid:0 nice:0 policy:0 rt_prio:0)
+#    -----------------
+#
+#                  _------=> CPU#            
+#                 / _-----=> irqs-off        
+#                | / _----=> need-resched    
+#                || / _---=> hardirq/softirq 
+#                ||| / _--=> preempt-depth   
+#                |||| /_--=> lock-depth       
+#                |||||/     delay             
+#  cmd     pid   |||||| time  |   caller      
+#     \   /      ||||||   \   |   /           
+  <idle>-0       1d.h.. 3891085us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3092721us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3112682us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3132641us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3152597us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3172556us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3192514us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3212477us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3232434us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3252393us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3272353us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3292310us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3312270us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       0d.h.. 3332229us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+  <idle>-0       1d.h.. 3352188us!: dragon_pci_mem_irq_handler <-handle_IRQ_event
+...
+
+Calcul des différences de date :
+
+$ bc -l
+bc 1.06.95
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+3272353-3252393
+19960 ---> 20 ms
+3232434-3212477
+19957
+3192514-3172556
+19958 ---> 20 ms

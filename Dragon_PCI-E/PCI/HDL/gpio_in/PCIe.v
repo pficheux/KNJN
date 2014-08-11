@@ -91,16 +91,11 @@ reg [1:0] LEDs;
 always @(posedge clk) if(RXwrite) LEDs <= RXdatawr[1:0];
 
 assign LED = LEDs;
-// GPIO is copy of LED0
-//assign gpio_output = LEDs[0];  
+
+// GPIO output is copy of GPIO input
 assign gpio_output = gpio_input;
 
-// blinking led close to USB
-reg [31:0] cnt2;
-always @(posedge clk) cnt2 <= cnt2 + 32'h1;
-
-// blink faster if MSI enabled
-//assign LED3 = (cfg_interrupt_msienable_c ? cnt2[22] : cnt2[24]);
+// LED3 (close to USB) is copy of GPIO input
 assign LED3 = gpio_input;
 
 assign trn_rdst_rdy_n_c = 1'b0;

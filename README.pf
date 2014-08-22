@@ -670,3 +670,25 @@ For details type `warranty'.
 19957
 3192514-3172556
 19958 ---> 20 ms
+
+22/8/2014
+=========
+
+- Ajout d'un GPIO out au design LEDs FX2 -> LEDs+gpio_out
+
+La période de la sortie dépend de la valeur de LED[1:0].
+
+reg [31:0] cnt;
+always @(posedge FIFO_CLK) cnt <= cnt+1;
+assign gpio_out = cnt[20+LED[1:0]];
+
+Test avec le script:
+
+while [ 1 ]
+do 
+      echo $X > /sys/bus/usb/drivers/dragon_usb/3-2\:1.0/ledmask
+      X=$(expr $X + 1)
+      sleep 5
+done
+
+

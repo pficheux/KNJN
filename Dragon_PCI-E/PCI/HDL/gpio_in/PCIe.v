@@ -91,11 +91,13 @@ reg [1:0] LEDs;
 always @(posedge clk) if(RXwrite) LEDs <= RXdatawr[1:0];
 
 assign LED = LEDs;
-
-// GPIO output is copy of GPIO input
+// GPIO is copy of LED0
+//assign gpio_output = LEDs[0];  
 assign gpio_output = gpio_input;
 
-// LED3 (close to USB) is copy of GPIO input
+
+// blink faster if MSI enabled
+//assign LED3 = (cfg_interrupt_msienable_c ? cnt2[22] : cnt2[24]);
 assign LED3 = gpio_input;
 
 assign trn_rdst_rdy_n_c = 1'b0;
@@ -126,14 +128,16 @@ function [31:0] SwapDWB;
 	SwapDWB = {DW[7:0], DW[15:8], DW[23:16], DW[31:24]};
 endfunction
 
+// IRQ every 1 sec
+//wire cfg_interrupt_n_c = ~(&cnt[25:0] & cfg_interrupt_msienable_c);
 // Interrupt on GPIO input
 reg cfg_interrupt;
-reg cfg_interrupt_rdy_n;
+wire cfg_interrupt_rdy_n;
 reg [2:0] gpio_input_filter;  always @(posedge clk) gpio_input_filter <= {gpio_input_filter[1:0], gpio_input};
 wire interrupt_now = ~gpio_input_filter[2] & gpio_input_filter[1];
 always @(posedge clk) cfg_interrupt <= cfg_interrupt ? cfg_interrupt_rdy_n : cfg_interrupt_msienable_c & interrupt_now;
 wire cfg_interrupt_n_c = ~cfg_interrupt;
-
+//wire cfg_interrupt_n_c = ~(gpio_input & cfg_interrupt_msienable_c);
 
 wire cfg_interrupt_assert_n_c = 1'b1;
 wire [7:0] cfg_interrupt_di_c = 8'b0;

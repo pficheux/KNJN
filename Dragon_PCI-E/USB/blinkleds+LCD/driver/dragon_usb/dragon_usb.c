@@ -24,6 +24,7 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/usb.h>
+#include <asm/uaccess.h>
 
 MODULE_AUTHOR("Pierre Ficheux <pierre.ficheux@gmail.com>");
 MODULE_DESCRIPTION("KNJN Dragon USB driver (leds + text LCD)");

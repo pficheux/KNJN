@@ -691,4 +691,18 @@ do
       sleep 5
 done
 
+=> ou bien (plus simple)
+
+echo $X > /dev/dragon_usb0
+
+17/11/2014
+==========
+
+- Utilisation de 'fxload' sur RPi (supporté par BR + fonctionne mieux !)
+
+echo -n "Loading firmware..."
+X=$(ls -t /dev/bus/usb/001)
+ID=$(echo $X | cut -d ' ' -f1)
+fxload -I FX2_init.hex -D /dev/bus/usb/001/${ID} -t fx2
+
 

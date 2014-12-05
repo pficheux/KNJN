@@ -63,6 +63,10 @@ where <led_mask> is 0, 1, 2, 3, ...
 
 A GPIO output is available (pin V15)  and value is same as LED[0] (pin V3).
 
+You can also user "led_test.sh" for led blinking
+
+# ./led_test.sh
+
 6- Text LCD
 
 Text LCD is supported by default design, just try 'lcd_test.sh' (based on 'dragon_pci_test') in driver directory.

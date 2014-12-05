@@ -21,9 +21,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <malloc.h>
 
-main (int ac, char **av)
+int main (int ac, char **av)
 {
   int fd, i, nw, nr, ndata, inc = 0x11111111, quiet = 0;
   unsigned int addr = 0, data = 0x11111111, *buf;
@@ -98,4 +99,6 @@ main (int ac, char **av)
   free (buf);
 
   close (fd);
+
+  return 0;
 }

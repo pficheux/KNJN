@@ -3,7 +3,7 @@ KNJN Dragon PCI Linux drivers
 
 IO			IORESOURCE_IO driver (64 bytes)
 MEM 			IORESOURCE_MEM driver (64 Kbytes)
-dragon_pci_test.c	Test program
+user/C/dragon_pci_test	Test program
 meduse.txt, larose.txt	Sample data to send to Dragon with cat + dd
 RTDM			RTDM drivers (IO) for Xenomai
 

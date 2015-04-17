@@ -202,7 +202,7 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   printk(KERN_INFO "dragon_pci_mem: using major %d and minor %d for this device\n", major, minor);
 
   /* Allocate a private structure and reference it as driver's data */
-  data = (struct dragon_pci_mem_struct *)kmalloc(sizeof(struct dragon_pci_mem_struct), GFP_KERNEL);
+  data = (struct dragon_pci_mem_struct *)kcalloc(1, sizeof(struct dragon_pci_mem_struct), GFP_KERNEL);
   if (data == NULL) {
     printk(KERN_WARNING "dragon_pci_mem: unable to allocate private structure\n");
 

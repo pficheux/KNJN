@@ -1,6 +1,6 @@
 SUBDIRS = IO MEM
 
-USER_PROG= dragon_pci_test
+USER_PROG=
 
 
 all: $(USER_PROG)

@@ -13,6 +13,7 @@
 #include <linux/pci.h>		/* pci_*() */
 #include <linux/pci_ids.h>	/* pci idents */
 #include <linux/list.h>		/* list_*() */
+#include <asm/io.h>		/* iomap and friends */
 #include <asm/uaccess.h>	/* copy_{from,to}_user() */
 #include <linux/fs.h>		/* file_operations */
 #include <linux/interrupt.h>	/* request_irq etc */
@@ -29,7 +30,7 @@ static int major = 0; /* Major number */
 module_param(major, int, 0660);
 MODULE_PARM_DESC(major, "Static major number (none = dynamic)");
 
-static int debug = 0; 
+static int debug = 1;
 module_param(debug, int, 0660);
 MODULE_PARM_DESC(debug, "Debug flag (1 = YES, 0 = NO)");
 
@@ -51,7 +52,7 @@ struct dragon_pci_mem_struct {
   struct list_head	link; /* Double linked list */
   struct pci_dev	*dev; /* PCI device */
   int			minor; /* Minor number */
-  unsigned int		*mmio[DEVICE_COUNT_RESOURCE];
+  void __iomem *	mmio[DEVICE_COUNT_RESOURCE];
   u32			mmio_len[DEVICE_COUNT_RESOURCE];
 };
 
@@ -247,29 +248,14 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
     // Could be done with :
     //  data->mmio[i] = pci_iomap (dev, i, pci_resource_len(dev, i));
     //
-    if (pci_resource_flags(dev, i) & IORESOURCE_MEM) {
-      if (pci_resource_flags(dev, i) & IORESOURCE_CACHEABLE) {
-	printk (KERN_INFO "cacheable ! \n");
-	data->mmio[i] = ioremap(pci_resource_start(dev, i), pci_resource_len(dev, i));
-      }
-      else {
-	printk (KERN_INFO "NOT cacheable ! \n");
-	data->mmio[i] = ioremap_nocache(pci_resource_start(dev, i), pci_resource_len(dev, i));
-      }
-    
-      if (data->mmio[i] == NULL) {
-	printk(KERN_WARNING "dragon_pci_mem: unable to remap I/O memory\n");
-	
-	ret = -ENOMEM;
-	goto cleanup_ioremap;
-      }
-
-      data->mmio_len[i] = pci_resource_len(dev, i);
-
-      printk(KERN_INFO "dragon_pci_mem: I/O memory has been remaped at %#08x\n", (u32)data->mmio[i]);
-    } else {
-      data->mmio[i] = 0;
+    data->mmio[i] = pci_iomap(dev, i, pci_resource_len(dev,i));
+    if (data->mmio[i] == NULL) {
+      printk(KERN_WARNING "dragon_pci_mem: unable to remap I/O memory\n");
+      ret = -ENOMEM;
+      goto cleanup_ioremap;
     }
+    data->mmio_len[i] = pci_resource_len(dev, i);
+    printk(KERN_INFO "dragon_pci_mem: I/O memory has been remapped at %#08x\n", (u32)data->mmio[i]);
   }
 
   /* Install the irq handler */
@@ -293,7 +279,7 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
 cleanup_irq:
   for (i--; i >= 0; i--) {
     if (data->mmio[i] != NULL)
-      iounmap(data->mmio[i]);
+      pci_iounmap(dev, data->mmio[i]);
   }
 cleanup_ioremap:
   pci_release_regions(dev);
@@ -312,19 +298,30 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
   u8 mypin;
 
   for (i = 0 ; i < DEVICE_COUNT_RESOURCE ; i++) {
-    if (data->mmio[i] != NULL)
-      iounmap(data->mmio[i]);
+    if (data->mmio[i] != NULL) {
+      printk(KERN_INFO "dragon_pci_mem: unmapping region %x\n", data->mmio[i]);
+      pci_iounmap(dev, data->mmio[i]);
+      printk(KERN_INFO "dragon_pci_mem: unmapped region %x\n", data->mmio[i]);
+    }
   }
 
+  printk(KERN_INFO "dragon_pci_mem: Releasing regions\n");
   pci_release_regions(dev);
+  printk(KERN_INFO "dragon_pci_mem: Disabling device\n");
   pci_disable_device(dev);
 
+  printk(KERN_INFO "dragon_pci_mem: Reading config byte\n");
   pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
-  if (mypin)
+  if (mypin) {
+    printk(KERN_INFO "dragon_pci_mem: Freeing irq\n");
     free_irq(dev->irq, data);
+    printk(KERN_INFO "dragon_pci_mem: Freed irq\n");
+  }
 
+  printk(KERN_INFO "dragon_pci_mem: Deleting list\n");
   list_del(&data->link);
 
+  printk(KERN_INFO "dragon_pci_mem: kfreeing struct\n");
   kfree(data);
 
   printk(KERN_INFO "dragon_pci_mem: device removed\n");

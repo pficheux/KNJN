@@ -1,7 +1,7 @@
 /*
- * Linux driver for KNJN Dragon PCI-E (IORESOURCE_MEM)
+ * Linux driver for KNJN Dragon PCI-L (IORESOURCE_MEM)
  *
- *   Copyright (C) 2014 Pierre Ficheux (pierre.ficheux@gmail.com)
+ *   Copyright (C) 2015 Pierre Ficheux (pierre.ficheux@gmail.com)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -54,10 +54,10 @@ static struct class *pcidemo_class;
  */
 
 #define XILINX_ID    0x10ee
-#define VIRTEX5_ID   0x0007
+#define DEVICE_ID    0x0100
 
 static struct pci_device_id dragon_pci_mem_id_table[] = {
-  {XILINX_ID, VIRTEX5_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+  {XILINX_ID, DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
   {0,}	/* 0 terminated list */
 };
 MODULE_DEVICE_TABLE(pci, dragon_pci_mem_id_table);
@@ -75,6 +75,10 @@ struct dragon_pci_mem_struct {
   u32			mmio_len[DEVICE_COUNT_RESOURCE];
 };
 
+// IRQ handling does not work with default design (?) -> freeeeze
+//#define USE_IRQ
+
+#ifdef USE_IRQ
 /*
  * Event handler
  */
@@ -87,6 +91,7 @@ irqreturn_t dragon_pci_mem_irq_handler(int irq, void *dev_id)
 
   return IRQ_HANDLED;
 }
+#endif
 
 /*
  * File operations
@@ -215,7 +220,6 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   int i, ret = 0;
   struct dragon_pci_mem_struct *data;
   static int minor = 0;
-  u8 mypin;
   struct device *device = NULL;
 
   printk(KERN_INFO "dragon_pci_mem: found %04x:%04x\n", ent->vendor, ent->device);
@@ -254,6 +258,9 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
 
   /* Inspect PCI BARs and search IORESOURCE_IO */
   for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+
+    data->mmio[i] = NULL;
+
     if (pci_resource_len(dev, i) == 0)
       continue;
 
@@ -262,21 +269,10 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
 
     printk(KERN_INFO "dragon_pci_mem: BAR %d (%#08x-%#08x), len=%d, flags=%#08x\n", i, (u32) pci_resource_start(dev, i), (u32) pci_resource_end(dev, i), (u32) pci_resource_len(dev, i), (u32) pci_resource_flags(dev, i));
 
-    // Remap if IORESOURCE_MEM. Check if cacheable
-    //
-    // Could be done with :
-    //  data->mmio[i] = pci_iomap (dev, i, pci_resource_len(dev, i));
-    //
+    // Remap if IORESOURCE_MEM
     if (pci_resource_flags(dev, i) & IORESOURCE_MEM) {
-      if (pci_resource_flags(dev, i) & IORESOURCE_CACHEABLE) {
-	printk (KERN_INFO "cacheable ! \n");
-	data->mmio[i] = ioremap(pci_resource_start(dev, i), pci_resource_len(dev, i));
-      }
-      else {
-	printk (KERN_INFO "NOT cacheable ! \n");
-	data->mmio[i] = ioremap_nocache(pci_resource_start(dev, i), pci_resource_len(dev, i));
-      }
-    
+      data->mmio[i] = ioremap_nocache(pci_resource_start(dev, i), pci_resource_len(dev, i));
+
       if (data->mmio[i] == NULL) {
 	printk(KERN_WARNING "dragon_pci_mem: unable to remap I/O memory\n");
 	
@@ -293,19 +289,24 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   }
 
   /* Install the irq handler */
-  pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
-  if (mypin) {
-    if (pci_enable_msi (dev))
-      printk(KERN_WARNING "dragon_pci_mem: unable to init MSI !\n");
-    else
-      ret = request_irq(dev->irq, dragon_pci_mem_irq_handler, 0, "dragon_pci_mem", data);
-    if (ret < 0) {
-      printk(KERN_WARNING "dragon_pci_mem: unable to register irq handler\n");
-      goto cleanup_irq;
+#ifdef USE_IRQ
+  {
+    u8 mypin;
+    pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
+    if (mypin) {
+      if (pci_enable_msi (dev))
+	printk(KERN_WARNING "dragon_pci_mem: unable to init MSI !\n");
+      else
+	ret = request_irq(dev->irq, dragon_pci_mem_irq_handler, 0, "dragon_pci_mem", data);
+      if (ret < 0) {
+	printk(KERN_WARNING "dragon_pci_mem: unable to register irq handler\n");
+	goto cleanup_irq;
+      }
     }
+    else
+      printk(KERN_INFO "dragon_pci_mem: no IRQ!\n");
   }
-  else
-    printk(KERN_INFO "dragon_pci_mem: no IRQ!\n");
+#endif
 
   /* Link the new data structure with others */
   list_add_tail(&data->link, &dragon_pci_mem_list);
@@ -340,7 +341,6 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
 {
   int i;
   struct dragon_pci_mem_struct *data = pci_get_drvdata(dev);
-  u8 mypin;
 
   for (i = 0 ; i < DEVICE_COUNT_RESOURCE ; i++) {
     if (data->mmio[i] != NULL)
@@ -349,12 +349,17 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
 
   pci_release_regions(dev);
 
-  pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
-  if (mypin) {
-    free_irq(dev->irq, data);
-    pci_disable_msi(dev);
-  }
+#ifdef USE_IRQ
+  {
+    u8 mypin;
 
+    pci_read_config_byte (dev, PCI_INTERRUPT_PIN, &mypin);
+    if (mypin) {
+      free_irq(dev->irq, data);
+      pci_disable_msi(dev);
+    }
+  }
+#endif
   pci_disable_device(dev);
 
   list_del(&data->link);

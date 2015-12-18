@@ -3,13 +3,9 @@ KNJN DragonPCI-E Linux driver
 
 1- Introduction
 
-Driver works with HDL/PCIe.bit design, based on :
+Driver works with HDL/PCIe.bit design, based on KNJN examples or :
 
-http://www.knjn.com/private_files/FX2/FPGAproject_PCIE_FullExample.rar 
-
- or 
-
-http://www.fpga4fun.com/PCI-Express5.html
+ http://www.fpga4fun.com/PCI-Express5.html
 
 2- Building driver
 

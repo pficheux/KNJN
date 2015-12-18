@@ -46,7 +46,14 @@ Once BAR0 is detected you can read/write memory through the driver :
 
 4- Interrupt support
 
-Interrupt support is currently not available with default design (system freeze...).
+PCI-L board uses MSI. The current design generates 1 interrupt / sec (check 
+/proc/interrupts).
+
+$ grep dragon /proc/interrupts 
+53:        217        252   PCI-MSI-edge      dragon_pci_mem
+
+Because of design limitation (?) interrupt handling won't work after 
+removing/loading (rmmod/insmod) the driver -> you need to reboot the system !
 
 5- Leds
 

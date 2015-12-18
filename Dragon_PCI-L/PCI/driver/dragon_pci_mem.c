@@ -75,8 +75,8 @@ struct dragon_pci_mem_struct {
   u32			mmio_len[DEVICE_COUNT_RESOURCE];
 };
 
-// IRQ handling does not work with default design (?) -> freeeeze
-//#define USE_IRQ
+// Works with updated design PCIe design
+#define USE_IRQ
 
 #ifdef USE_IRQ
 /*

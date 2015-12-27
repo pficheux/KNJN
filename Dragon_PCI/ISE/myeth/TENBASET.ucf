@@ -1,5 +1,0 @@
-NET "CLK40"  LOC = "p15"  ;
-NET "CLK_USB"  LOC = "P18"  ;
-NET "Ethernet_RDp"  LOC = "p80"  ;
-NET "Ethernet_TDm"  LOC = "P77"  ;
-NET "Ethernet_TDp"  LOC = "P76"  ;

@@ -1,2 +1,0 @@
-NET "clk"  LOC = "P18"  ;
-NET "LED"  LOC = "P27"  ;

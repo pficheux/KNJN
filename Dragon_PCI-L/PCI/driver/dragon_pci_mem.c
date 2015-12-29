@@ -124,7 +124,7 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
       return -EFAULT;
 
   if (debug)
-    printk(KERN_INFO "dragon_pci_mem: read %d/%d chars at offset %d from remapped I/O memory bank %d\n", real, count, (int)*ppos, bank);
+    printk(KERN_INFO "dragon_pci_mem: read %u/%u chars at offset %u from remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
 
   *ppos += real;
 
@@ -163,7 +163,7 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
       return -EFAULT;
 
   if (debug)
-    printk(KERN_INFO "dragon_pci_mem: wrote %d/%d chars at offset %d to remapped I/O memory bank %d\n", real, count, (int)*ppos, bank);
+    printk(KERN_INFO "dragon_pci_mem: wrote %u/%u chars at offset %u to remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
 
   *ppos += real;
 
@@ -282,7 +282,7 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
 
       data->mmio_len[i] = pci_resource_len(dev, i);
 
-      printk(KERN_INFO "dragon_pci_mem: IORESOURCE_MEM memory has been remaped at %#08x\n", (u32)data->mmio[i]);
+      printk(KERN_INFO "dragon_pci_mem: IORESOURCE_MEM memory has been remaped at 0x%p\n", data->mmio[i]);
     } else {
       data->mmio[i] = 0;
     }

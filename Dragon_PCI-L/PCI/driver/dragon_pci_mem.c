@@ -116,7 +116,11 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
   }
 
   /* Check for overflow */
-  real = min(data->mmio_len[bank] - (int)*ppos, count);
+#ifdef CONFIG_X86_64
+  real = min(data->mmio_len[bank] - (u64)*ppos, (u64) count);
+#else
+  real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
+#endif
 
   /* Copy data from board */
   if (real)
@@ -151,7 +155,11 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
   }
 
   /* Check for overflow */
-  real = min(data->mmio_len[bank] - (int)*ppos, count);
+#ifdef CONFIG_X86_64
+  real = min(data->mmio_len[bank] - (u64)*ppos, (u64) count);
+#else
+  real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
+#endif
 
   if (debug) {
     for (i = 0 ; i < real ; i++)

@@ -9,10 +9,6 @@ $ make
 # modprobe usbnet
 # insmod dragon_usbnet.ko
 
-You can now control the 3 leds by sending raw Ethernet packets containing
-led mask value (0 -> 7)
-
-# ./usbnet_leds.sh
 
 - Test with "ping"
 
@@ -22,7 +18,17 @@ led mask value (0 -> 7)
 
 => You can see packets with 'tcpdump -i usb0 -X' or usbmon.
 
+You can also control the 3 leds by sending ICMP packet with specific pattern.
+
+# ping 1.2.3.5 -p 0 -> leds off
+# ping 1.2.3.5 -p 7 -> leds on
+# ping 1.2.3.5 -p 1 -> leds 1 ON
+...
+
+# ./led_test.sh 1.2.3.5
+
+
+
 Enjoy
 
 PF
- 

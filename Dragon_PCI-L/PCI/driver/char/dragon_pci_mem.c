@@ -122,6 +122,11 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
   real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
 #endif
 
+  if (debug) {
+    for (i = 0 ; i < real ; i++)
+      printk (KERN_INFO "read buf[%d] = %x\n", i, *(buf+i));
+  }
+
   /* Copy data from board */
   if (real)
     if (copy_to_user((void __user *)buf, (void *)data->mmio[bank] + (int)*ppos, real))
@@ -163,7 +168,7 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
 
   if (debug) {
     for (i = 0 ; i < real ; i++)
-      printk (KERN_INFO "buf[%d] = %x\n", i, *(buf+i));
+      printk (KERN_INFO "write buf[%d] = %x\n", i, *(buf+i));
   }
 
   if (real)
@@ -301,12 +306,14 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   if (dev->pin) {
     if (pci_enable_msi (dev))
       printk(KERN_WARNING "dragon_pci_mem: unable to init MSI !\n");
-    else
+    else 
       ret = request_irq(dev->irq, dragon_pci_mem_irq_handler, 0, "dragon_pci_mem", data);
     if (ret < 0) {
       printk(KERN_WARNING "dragon_pci_mem: unable to register irq handler\n");
       goto cleanup_irq;
     }
+    else
+      printk(KERN_WARNING "dragon_pci_mem: IRQ %d registered !\n", dev->irq);
   }
   else
     printk(KERN_INFO "dragon_pci_mem: no IRQ!\n");

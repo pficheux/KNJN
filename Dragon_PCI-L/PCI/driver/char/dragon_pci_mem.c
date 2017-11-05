@@ -122,18 +122,20 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
   real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
 #endif
 
-  if (debug) {
-    for (i = 0 ; i < real ; i++)
-      printk (KERN_INFO "read buf[%d] = %x\n", i, *(buf+i));
-  }
-
   /* Copy data from board */
   if (real)
     if (copy_to_user((void __user *)buf, (void *)data->mmio[bank] + (int)*ppos, real))
       return -EFAULT;
 
-  if (debug)
+  if (debug) {
+    int i;
+    char *p = (char*) data->mmio[bank] + (int)*ppos;
+
+    for (i = 0 ; i < real ; i++)
+	printk ("%x\n", *(p+i));
+
     printk(KERN_INFO "dragon_pci_mem: read %u/%u chars at offset %u from remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
+  }
 
   *ppos += real;
 
@@ -166,17 +168,20 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
   real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
 #endif
 
-  if (debug) {
-    for (i = 0 ; i < real ; i++)
-      printk (KERN_INFO "write buf[%d] = %x\n", i, *(buf+i));
-  }
-
   if (real)
     if (copy_from_user((void*)data->mmio[bank] + (int)*ppos, (void __user *)buf , real))
       return -EFAULT;
 
-  if (debug)
+  if (debug) {
+    int i;
+    char *p = (char*) data->mmio[bank] + (int)*ppos;
+
+    for (i = 0 ; i < real ; i++)
+        printk ("%x\n", *(p+i));
+
+
     printk(KERN_INFO "dragon_pci_mem: wrote %u/%u chars at offset %u to remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
+  }
 
   *ppos += real;
 

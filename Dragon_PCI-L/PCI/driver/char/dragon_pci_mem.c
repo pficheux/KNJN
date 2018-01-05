@@ -1,7 +1,7 @@
 /*
  * Linux driver for KNJN Dragon PCI-L (IORESOURCE_MEM)
  *
- *   Copyright (C) 2015 Pierre Ficheux (pierre.ficheux@gmail.com)
+ *   Copyright (C) 2015-2017 Pierre Ficheux (pierre.ficheux@gmail.com)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -375,7 +375,8 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
 
   list_del(&data->link);
 
-  device_destroy(pcidemo_class, MKDEV(major, data->minor));
+  if (pcidemo_class)
+    device_destroy(pcidemo_class, MKDEV(major, data->minor));
 
   kfree(data);
 

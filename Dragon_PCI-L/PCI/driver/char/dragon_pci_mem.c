@@ -1,7 +1,7 @@
 /*
- * Linux driver for KNJN Dragon PCI-L (IORESOURCE_MEM)
+ * Linux driver for KNJN Dragon PCI-L (IORESOURCE_MEM/BAR0)
  *
- *   Copyright (C) 2015-2017 Pierre Ficheux (pierre.ficheux@gmail.com)
+ *   Copyright (C) 2015-2021 Pierre Ficheux (pierre.ficheux@gmail.com)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ static struct class *pcidemo_class;
 #define XILINX_ID    0x10ee
 #define DEVICE_ID    0x0100
 
+#define BAR0         0
+
 static struct pci_device_id dragon_pci_mem_id_table[] = {
   {XILINX_ID, DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
   {0,}	/* 0 terminated list */
@@ -71,8 +73,8 @@ struct dragon_pci_mem_struct {
   struct list_head	link; /* Double linked list */
   struct pci_dev	*dev; /* PCI device */
   int			minor; /* Minor number */
-  unsigned int		*mmio[DEVICE_COUNT_RESOURCE];
-  u32			mmio_len[DEVICE_COUNT_RESOURCE];
+  unsigned int		*mmio;
+  u32			mmio_len;
 };
 
 // Works with updated design PCIe design
@@ -98,44 +100,20 @@ irqreturn_t dragon_pci_mem_irq_handler(int irq, void *dev_id)
  */
 static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, loff_t *ppos)
 {
-  int i, real, bank = DEVICE_COUNT_RESOURCE;
+  int real;
   struct dragon_pci_mem_struct *data = file->private_data;
-
-  /* Find the first remapped I/O memory bank to read */
-  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-    if (data->mmio[i] != 0) {
-      bank = i;
-      break;
-    }
-  }
-
-  /* No bank found */
-  if (bank == DEVICE_COUNT_RESOURCE) {
-    printk(KERN_INFO "dragon_pci_mem: no remapped I/O memory bank to read\n");
-    return -ENXIO;
-  }
 
   /* Check for overflow */
 #ifdef CONFIG_X86_64
-  real = min(data->mmio_len[bank] - (u64)*ppos, (u64) count);
+  real = min(data->mmio_len - (u64)*ppos, (u64) count);
 #else
-  real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
+  real = min(data->mmio_len - (u32)*ppos, (u32) count);
 #endif
 
   /* Copy data from board */
   if (real)
-    if (copy_to_user((void __user *)buf, (void *)data->mmio[bank] + (int)*ppos, real))
+    if (copy_to_user((void __user *)buf, (void *)data->mmio + (int)*ppos, real))
       return -EFAULT;
-
-  if (debug) {
-    int i;
-    char *p = (char*) data->mmio[bank] + (int)*ppos;
-
-    for (i = 0 ; i < real ; i++)
-	printk ("%x\n", *(p+i));
-
-    printk(KERN_INFO "dragon_pci_mem: read %u/%u chars at offset %u from remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
-  }
 
   *ppos += real;
 
@@ -144,43 +122,23 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
 
 static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
 {
-  int i, real, bank = DEVICE_COUNT_RESOURCE;
+  int i, data_to_write, real;
   struct dragon_pci_mem_struct *data = file->private_data;
-
-  /* Find the first remapped I/O memory bank to read */
-  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-    if (data->mmio[i] != 0) {
-      bank = i;
-      break;
-    }
-  }
-
-  /* No bank found */
-  if (bank == DEVICE_COUNT_RESOURCE) {
-    printk(KERN_INFO "dragon_pci_mem: no remapped I/O memory bank to read\n");
-    return -ENXIO;
-  }
-
+  
   /* Check for overflow */
 #ifdef CONFIG_X86_64
-  real = min(data->mmio_len[bank] - (u64)*ppos, (u64) count);
+  real = min(data->mmio_len - (u64)*ppos, (u64) count);
 #else
-  real = min(data->mmio_len[bank] - (u32)*ppos, (u32) count);
+  real = min(data->mmio_len - (u32)*ppos, (u32) count);
 #endif
 
-  if (real)
-    if (copy_from_user((void*)data->mmio[bank] + (int)*ppos, (void __user *)buf , real))
-      return -EFAULT;
+  // Led control -> just send mask from 0 to 3
+  data_to_write = buf[0];
+  iowrite32(data_to_write, data->mmio);
 
   if (debug) {
-    int i;
-    char *p = (char*) data->mmio[bank] + (int)*ppos;
-
-    for (i = 0 ; i < real ; i++)
-        printk ("%x\n", *(p+i));
-
-
-    printk(KERN_INFO "dragon_pci_mem: wrote %u/%u chars at offset %u to remapped I/O memory bank %d\n", (unsigned int)real, (unsigned int)count, (unsigned int)*ppos, bank);
+    for (i = 0 ; i < sizeof(int) ; i++)
+      pr_info ("%s buf[%d] = %x\n", __FUNCTION__, i, buf[i]);
   }
 
   *ppos += real;
@@ -235,7 +193,7 @@ static struct file_operations dragon_pci_mem_fops = {
  */
 static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id *ent)
 {
-  int i, ret = 0;
+  int ret = 0;
   struct dragon_pci_mem_struct *data;
   static int minor = 0;
   struct device *device = NULL;
@@ -274,37 +232,16 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
     goto cleanup_regions;
   }
 
-  /* Inspect PCI BARs and search IORESOURCE_IO */
-  for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-
-    data->mmio[i] = NULL;
-
-    if (pci_resource_len(dev, i) == 0)
-      continue;
-
-    if (pci_resource_start(dev, i) == 0)
-      continue;
-
-    printk(KERN_INFO "dragon_pci_mem: BAR %d (%#08x-%#08x), len=%d, flags=%#08x\n", i, (u32) pci_resource_start(dev, i), (u32) pci_resource_end(dev, i), (u32) pci_resource_len(dev, i), (u32) pci_resource_flags(dev, i));
-
-    // Remap if IORESOURCE_MEM
-    if (pci_resource_flags(dev, i) & IORESOURCE_MEM) {
-      data->mmio[i] = ioremap_nocache(pci_resource_start(dev, i), pci_resource_len(dev, i));
-
-      if (data->mmio[i] == NULL) {
-	printk(KERN_WARNING "dragon_pci_mem: unable to remap I/O memory\n");
-	
-	ret = -ENOMEM;
-	goto cleanup_ioremap;
-      }
-
-      data->mmio_len[i] = pci_resource_len(dev, i);
-
-      printk(KERN_INFO "dragon_pci_mem: IORESOURCE_MEM memory has been remaped at 0x%p\n", data->mmio[i]);
-    } else {
-      data->mmio[i] = 0;
-    }
+  /* Remap BAR0 */
+  data->mmio = pci_iomap(dev, BAR0, pci_resource_len(dev, BAR0));
+  if (data->mmio == NULL) {
+    printk(KERN_WARNING "dragon_pci_mem: unable to remap BAR0\n");
+    goto cleanup_pci_iomap;
   }
+
+  data->mmio_len = pci_resource_len(dev, BAR0);
+
+  printk(KERN_INFO "dragon_pci_mem: BAR0 has been remaped at 0x%p\n", data->mmio);
 
   /* Install the irq handler */
 #ifdef USE_IRQ
@@ -339,11 +276,8 @@ static int dragon_pci_mem_probe(struct pci_dev *dev, const struct pci_device_id 
   return 0;
 
 cleanup_irq:
-  for (i--; i >= 0; i--) {
-    if (data->mmio[i] != NULL)
-      iounmap(data->mmio[i]);
-  }
-cleanup_ioremap:
+  pci_iounmap(dev, data->mmio);
+cleanup_pci_iomap:
   pci_release_regions(dev);
 cleanup_regions:
   pci_disable_device(dev);
@@ -355,13 +289,10 @@ cleanup_kmalloc:
 
 static void dragon_pci_mem_remove(struct pci_dev *dev)
 {
-  int i;
   struct dragon_pci_mem_struct *data = pci_get_drvdata(dev);
 
-  for (i = 0 ; i < DEVICE_COUNT_RESOURCE ; i++) {
-    if (data->mmio[i] != NULL)
-      iounmap(data->mmio[i]);
-  }
+  // Unmap BAR0
+  pci_iounmap(dev, data->mmio);
 
   pci_release_regions(dev);
 
@@ -375,8 +306,7 @@ static void dragon_pci_mem_remove(struct pci_dev *dev)
 
   list_del(&data->link);
 
-  if (pcidemo_class)
-    device_destroy(pcidemo_class, MKDEV(major, data->minor));
+  device_destroy(pcidemo_class, MKDEV(major, data->minor));
 
   kfree(data);
 

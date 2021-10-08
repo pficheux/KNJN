@@ -122,8 +122,9 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
 
 static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
 {
-  int i, data_to_write, real;
+  int i, real;
   struct dragon_pci_mem_struct *data = file->private_data;
+  unsigned int *p = (unsigned int *)buf;
   
   /* Check for overflow */
 #ifdef CONFIG_X86_64
@@ -132,13 +133,11 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
   real = min(data->mmio_len - (u32)*ppos, (u32) count);
 #endif
 
-  // Led control -> just send mask from 0 to 3
-  data_to_write = buf[0];
-  iowrite32(data_to_write, data->mmio);
-
-  if (debug) {
-    for (i = 0 ; i < sizeof(int) ; i++)
-      pr_info ("%s buf[%d] = %x\n", __FUNCTION__, i, buf[i]);
+  // Write data
+  for (i = 0 ; i < real/4 ; i++) {
+    if (debug)
+      pr_info ("%s write %x @ %p\n", __FUNCTION__, *(p+i), data->mmio + i);
+    iowrite32(*(p+i), data->mmio + i);
   }
 
   *ppos += real;

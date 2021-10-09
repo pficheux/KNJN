@@ -100,8 +100,9 @@ irqreturn_t dragon_pci_mem_irq_handler(int irq, void *dev_id)
  */
 static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, loff_t *ppos)
 {
-  int real;
+  int real, i;
   struct dragon_pci_mem_struct *data = file->private_data;
+  unsigned int *p = (unsigned int *)buf;
 
   /* Check for overflow */
 #ifdef CONFIG_X86_64
@@ -109,11 +110,19 @@ static ssize_t dragon_pci_mem_read(struct file *file, char *buf, size_t count, l
 #else
   real = min(data->mmio_len - (u32)*ppos, (u32) count);
 #endif
+ 
+  // Read data 
+  for (i = 0 ; i < real/4 ; i++) {
+    *(p+i) = ioread32(data->mmio+ i + *ppos); 
+    if (debug)
+      pr_info ("%s: read %x @ %p (ppos= %lld)\n", __FUNCTION__, *(p+i), data->mmio+ i + *ppos, *ppos);
+  }
 
-  /* Copy data from board */
+/*
   if (real)
     if (copy_to_user((void __user *)buf, (void *)data->mmio + (int)*ppos, real))
       return -EFAULT;
+*/
 
   *ppos += real;
 
@@ -136,8 +145,8 @@ static ssize_t dragon_pci_mem_write(struct file *file, const char *buf, size_t c
   // Write data
   for (i = 0 ; i < real/4 ; i++) {
     if (debug)
-      pr_info ("%s write %x @ %p\n", __FUNCTION__, *(p+i), data->mmio + i);
-    iowrite32(*(p+i), data->mmio + i);
+      pr_info ("%s: write %x @ %p (ppos= %lld)\n", __FUNCTION__, *(p+i), data->mmio + *ppos + i, *ppos);
+    iowrite32(*(p+i), data->mmio + *ppos + i);
   }
 
   *ppos += real;

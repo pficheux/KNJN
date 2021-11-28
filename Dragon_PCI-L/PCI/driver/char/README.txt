@@ -1,23 +1,23 @@
-KNJN DragonPCI-E Linux driver
-=============================
+KNJN DragonPCI-E Linux (char) driver
+====================================
 
 1- Introduction
 
-Driver works with KNJN PCI example design (FPGA Project - PCI Express).
+The driver works with KNJN PCI sample design (FPGA Project - PCI Express).
 
-2- Building driver
+2- Building the driver
 
-Simply type :
+To build the driver, simply type:
 
 $ make
 
-3- Loading and testing driver
+3- Loading and testing the driver
 
-You can load driver with:
+You can load the driver with:
 
 # insmod dragon_pci_mem.ko (or 'modprobe dragon_pci_mem' if you install it with 'sudo make install')
 
-Once driver is loaded you should see output in kernel log with 'dmesg' :
+Once the driver is loaded you should see the following messge in kernel log using 'dmesg'.
 
 # insmod dragon_pci_mem.ko
 # dmesg
@@ -26,7 +26,7 @@ Once driver is loaded you should see output in kernel log with 'dmesg' :
 [93471.212172] dragon_pci_mem: IORESOURCE_MEM memory has been remaped at 0x00000000a14b6c75
 [93471.212343] dragon_pci_mem: IRQ 35 registered !
 
-1- Writing/reading data to/from memory
+4- Writing/reading data to/from memory
 
 You can use 'dragon_pci_test'to write data.
 
@@ -52,7 +52,7 @@ Wrote 16 chars
 00000000  01 00 00 00 02 00 00 00  03 00 00 00 04 00 00 00  |................|
 00000010
 
-Test with 'pcimem' (https://github.com/billfarrow/pcimem)
+Check with 'pcimem' (https://github.com/billfarrow/pcimem)
 
 # pcimem /sys/bus/pci/devices/0000\:04\:00.0/resource0 0 w*4
 /sys/bus/pci/devices/0000:04:00.0/resource0 opened.
@@ -64,28 +64,28 @@ PCI Memory mapped to address 0x7f3d1e801000.
 0x0008: 0x00000003
 0x000C: 0x00000004
 
-2- Leds
+5- Leds
 
-You can also use 'dragon_pci_test' program to control LED1/LED2.
+You can also use 'dragon_pci_test' program to control the leds (LED1/LED2).
 
 # dragon_pci_test /dev/dragon_pci_mem0 1 <led_mask> 0
 
-where <led_mask> is 0, 1, 2, 3 (modulo)
+where <led_mask> is 0, 1, 2, 3 (modulo 4)
 
 # ./led_test.sh
 
-2- Interrupt support
+6- Interrupt support
 
-PCI-L board uses MSI. The current design generates 1 interrupt / sec (check 
+The PCI-L board uses MSI. The current design generates 1 interrupt / sec (check 
 /proc/interrupts).
 
 $ grep dragon /proc/interrupts 
 53:        217        252   PCI-MSI-edge      dragon_pci_mem
 
-Because of design limitation (?) interrupt handling won't work after 
-removing/loading (rmmod/insmod) the driver -> you need to reboot the system !
+Because of a design limitation (?) interrupt handling won't work after 
+removing/loading (rmmod/insmod) the driver -> you should reboot the system !
 
 Enjoy
 
 PF
-10/2021
+11/2021

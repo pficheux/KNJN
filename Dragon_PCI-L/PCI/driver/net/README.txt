@@ -8,11 +8,12 @@ $ make
 
 2- Init the 'dragon0' interface (192.168.2.1 as an example)
 
+# systemctl network-manager stop 
 # ifconfig dragon0 192.168.2.1
 
 3- Create a 'fake' host to ping (192.168.2.2)
 
-# arp -s 192.168.2.2 77:2C:63:6F:1A:93
+# arp -s 192.168.2.2 01:02:03:04:05:06
 
 4- Ping the remote host with the 'ff' pattern
 

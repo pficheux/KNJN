@@ -1,49 +1,45 @@
-Dragon network driver testing
-=============================
+Testing the Dragon network driver
+=================================
 
-1- Insert module
+1- Compile and insert the module
 
+$ make
 # insmod dragon_pci_net.ko 
 
-2- Init 'dragon0' interface
+2- Init the 'dragon0' interface (192.168.2.1 as an example)
 
-# ifconfig dragon0 1.2.3.4
+# ifconfig dragon0 192.168.2.1
 
-3- Create a 'fake' host to ping
+3- Create a 'fake' host to ping (192.168.2.2)
 
-# arp -s 1.2.3.5 01:02:03:04:05:06
+# arp -s 192.168.2.2 77:2C:63:6F:1A:93
 
-4- Ping (-f) to remote host -> should start (fast) random led blinking
+4- Ping the remote host with the 'ff' pattern
 
-# ping -f 1.2.3.5
+$ ping -p ff 192.168.2.2
 
-5- tcpdump utility should display ICMP + input packets (sent by driver)
+5- The tcpdump utility should display ICMP and input packets (a string sent by the driver)
 
-# tcpdump -i dragon0 -X
+$ sudo tcpdump -i dragon0 -X
 ...
-17:21:57.380863 IP 1.2.3.4 > 1.2.3.5: ICMP echo request, id 2345, seq 4, length 64
-	0x0000:  4500 0054 192d 4000 4001 1970 0102 0304  E..T.-@.@..p....
-	0x0010:  0102 0305 0800 2f48 0929 0004 a561 8156  ....../H.)...a.V
-	0x0020:  a8cf 0500 0809 0a0b 0c0d 0e0f 1011 1213  ................
-	0x0030:  1415 1617 1819 1a1b 1c1d 1e1f 2021 2223  .............!"#
-	0x0040:  2425 2627 2829 2a2b 2c2d 2e2f 3031 3233  $%&'()*+,-./0123
-	0x0050:  3435 3637                                4567
-17:21:57.464002 IP2 bad-hlen 0
-	0x0000:  2020 2020 204b 4e4a 4e20 626f 6172 6473  .....KNJN.boards
-	0x0010:  2061 7265 2074 6865 2062 6573 7420 2121  .are.the.best.!!
+12:37:25.863895 IP2 
+	0x0000:  2020 4b4e 4a4e 2062 6f61 7264 7320 6172  ..KNJN.boards.ar
+	0x0010:  6520 7468 6520 6265 7374 2021 2120 2020  e.the.best.!!...
 	0x0020:  2020 2020 2020 2020 2020 2020 2020 2020  ................
 	0x0030:  2020                                     ..
-17:21:58.540977 IP2 bad-hlen 0
-	0x0000:  2020 2020 2020 4b4e 4a4e 2062 6f61 7264  ......KNJN.board
-	0x0010:  7320 6172 6520 7468 6520 6265 7374 2021  s.are.the.best.!
-	0x0020:  2120 2020 2020 2020 2020 2020 2020 2020  !...............
-	0x0030:  2020                               
-...
+12:37:26.756584 IP pierre-SH87R > 192.168.2.2: ICMP echo request, id 2091, seq 1, length 64
+	0x0000:  4500 0054 9d26 4000 4001 182f c0a8 0201  E..T.&@.@../....
+	0x0010:  c0a8 0202 0800 6f2e 082b 0001 66b7 c662  ......o..+..f..b
+	0x0020:  0000 0000 488b 0b00 0000 0000 ffff ffff  ....H...........
+	0x0030:  ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	0x0040:  ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	0x0050:  ffff ffff                             
 
 6- Leds test
 
-Led blinking could be done with :
+Led blinking could be done with:
 
-$ ./led_test.sh 1.2.3.5
+$ ./led_test.sh 192.168.2.2
+
 
 

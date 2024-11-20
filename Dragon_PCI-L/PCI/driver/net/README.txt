@@ -11,15 +11,11 @@ $ make
 # systemctl network-manager stop 
 # ifconfig dragon0 192.168.2.1
 
-3- Create a 'fake' host to ping (192.168.2.2)
-
-# arp -s 192.168.2.2 01:02:03:04:05:06
-
-4- Ping the remote host with the 'ff' pattern
+3- Ping a remote host with the 'ff' pattern
 
 $ ping -p ff 192.168.2.2
 
-5- The tcpdump utility should display ICMP and input packets (a string sent by the driver)
+4- The tcpdump utility should display ICMP and input packets (a string sent by the driver)
 
 $ sudo tcpdump -i dragon0 -X
 ...
@@ -36,7 +32,7 @@ $ sudo tcpdump -i dragon0 -X
 	0x0040:  ffff ffff ffff ffff ffff ffff ffff ffff  ................
 	0x0050:  ffff ffff                             
 
-6- Leds test
+5- Leds test
 
 Led blinking could be done with:
 
